@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #fff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#2CD3E1", "font": {"color": "#3C486B"}, "id": "pemkab_gresik_data", "label": "pemkab_gresik_data", "shape": "dot", "title": "pemkab_gresik_data"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "AHMADHa05846546", "label": "AHMADHa05846546", "shape": "dot", "title": "AHMADHa05846546"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Dejuliancrypt", "label": "Dejuliancrypt", "shape": "dot", "title": "Dejuliancrypt"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "aida_nabiha", "label": "aida_nabiha", "shape": "dot", "title": "aida_nabiha"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "noviralnoj82528", "label": "noviralnoj82528", "shape": "dot", "title": "noviralnoj82528"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "BKurn16725", "label": "BKurn16725", "shape": "dot", "title": "BKurn16725"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Lazzy_96", "label": "Lazzy_96", "shape": "dot", "title": "Lazzy_96"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "NurSali15536087", "label": "NurSali15536087", "shape": "dot", "title": "NurSali15536087"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "dzulkiflii95591", "label": "dzulkiflii95591", "shape": "dot", "title": "dzulkiflii95591"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "allie_photo", "label": "allie_photo", "shape": "dot", "title": "allie_photo"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "IkbalHemi", "label": "IkbalHemi", "shape": "dot", "title": "IkbalHemi"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "iruz17122002", "label": "iruz17122002", "shape": "dot", "title": "iruz17122002"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "AzamMachru84654", "label": "AzamMachru84654", "shape": "dot", "title": "AzamMachru84654"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "AliImro21597604", "label": "AliImro21597604", "shape": "dot", "title": "AliImro21597604"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Wandy011897916", "label": "Wandy011897916", "shape": "dot", "title": "Wandy011897916"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "SuhartonoS68225", "label": "SuhartonoS68225", "shape": "dot", "title": "SuhartonoS68225"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "SigitAnang2015", "label": "SigitAnang2015", "shape": "dot", "title": "SigitAnang2015"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "LailiWardh26318", "label": "LailiWardh26318", "shape": "dot", "title": "LailiWardh26318"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "skyyystarr", "label": "skyyystarr", "shape": "dot", "title": "skyyystarr"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "yogisupra353", "label": "yogisupra353", "shape": "dot", "title": "yogisupra353"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "FortuneLampung", "label": "FortuneLampung", "shape": "dot", "title": "FortuneLampung"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "kemendagri", "label": "kemendagri", "shape": "dot", "title": "kemendagri"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "e100ss", "label": "e100ss", "shape": "dot", "title": "e100ss"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "PerpussipGresik", "label": "PerpussipGresik", "shape": "dot", "title": "PerpussipGresik"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "bnn_kab_Gresik", "label": "bnn_kab_Gresik", "shape": "dot", "title": "bnn_kab_Gresik"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "infobawean", "label": "infobawean", "shape": "dot", "title": "infobawean"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "pdamgresik", "label": "pdamgresik", "shape": "dot", "title": "pdamgresik"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "KelilingBawean", "label": "KelilingBawean", "shape": "dot", "title": "KelilingBawean"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "URCBIMAGresik", "label": "URCBIMAGresik", "shape": "dot", "title": "URCBIMAGresik"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "DumasGresik15", "label": "DumasGresik15", "shape": "dot", "title": "DumasGresik15"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BPBDGRESIK", "label": "BPBDGRESIK", "shape": "dot", "title": "BPBDGRESIK"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BPNGresik", "label": "BPNGresik", "shape": "dot", "title": "BPNGresik"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "CakYukGresik", "label": "CakYukGresik", "shape": "dot", "title": "CakYukGresik"}, {"color": "#2CD3E1", "font": {"color": "#3C486B"}, "id": "BupatiGresik_data", "label": "BupatiGresik_data", "shape": "dot", "title": "BupatiGresik_data"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "hartonoekevin", "label": "hartonoekevin", "shape": "dot", "title": "hartonoekevin"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "hisar_sihotang", "label": "hisar_sihotang", "shape": "dot", "title": "hisar_sihotang"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "brodeny10", "label": "brodeny10", "shape": "dot", "title": "brodeny10"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "ekoekosebastia1", "label": "ekoekosebastia1", "shape": "dot", "title": "ekoekosebastia1"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "tenda_amiratent", "label": "tenda_amiratent", "shape": "dot", "title": "tenda_amiratent"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "tent_amira", "label": "tent_amira", "shape": "dot", "title": "tent_amira"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Indah09040", "label": "Indah09040", "shape": "dot", "title": "Indah09040"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "f_nafieq", "label": "f_nafieq", "shape": "dot", "title": "f_nafieq"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Aries_galauu", "label": "Aries_galauu", "shape": "dot", "title": "Aries_galauu"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "baharudin5991", "label": "baharudin5991", "shape": "dot", "title": "baharudin5991"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "mustajiaji27", "label": "mustajiaji27", "shape": "dot", "title": "mustajiaji27"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "CandraDifinubu3", "label": "CandraDifinubu3", "shape": "dot", "title": "CandraDifinubu3"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "seftian_anugrah", "label": "seftian_anugrah", "shape": "dot", "title": "seftian_anugrah"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "sadammpk", "label": "sadammpk", "shape": "dot", "title": "sadammpk"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "HCahaya99", "label": "HCahaya99", "shape": "dot", "title": "HCahaya99"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Suwarno40165154", "label": "Suwarno40165154", "shape": "dot", "title": "Suwarno40165154"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "bumdespranti", "label": "bumdespranti", "shape": "dot", "title": "bumdespranti"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Mmc99934673", "label": "Mmc99934673", "shape": "dot", "title": "Mmc99934673"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "adiRomadi13", "label": "adiRomadi13", "shape": "dot", "title": "adiRomadi13"}, {"color": "#FFA500", "font": {"color": "#3C486B"}, "id": "Roihatu14633837", "label": "Roihatu14633837", "shape": "dot", "title": "Roihatu14633837"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "Menkumham", "label": "Menkumham", "shape": "dot", "title": "Menkumham"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "Pemilu_KADA", "label": "Pemilu_KADA", "shape": "dot", "title": "Pemilu_KADA"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "NijaArmy", "label": "NijaArmy", "shape": "dot", "title": "NijaArmy"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "GUBERNURJATIM", "label": "GUBERNURJATIM", "shape": "dot", "title": "GUBERNURJATIM"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "Ariaethe", "label": "Ariaethe", "shape": "dot", "title": "Ariaethe"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "0xgo1", "label": "0xgo1", "shape": "dot", "title": "0xgo1"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "WalikotaTOMOHON", "label": "WalikotaTOMOHON", "shape": "dot", "title": "WalikotaTOMOHON"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "Bupati_TANJABAR", "label": "Bupati_TANJABAR", "shape": "dot", "title": "Bupati_TANJABAR"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiBulukumba", "label": "BupatiBulukumba", "shape": "dot", "title": "BupatiBulukumba"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "DppPDEMOKRAT", "label": "DppPDEMOKRAT", "shape": "dot", "title": "DppPDEMOKRAT"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "WalkotSurabaya", "label": "WalkotSurabaya", "shape": "dot", "title": "WalkotSurabaya"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiPESAWARAN", "label": "BupatiPESAWARAN", "shape": "dot", "title": "BupatiPESAWARAN"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiBEKASI", "label": "BupatiBEKASI", "shape": "dot", "title": "BupatiBEKASI"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiWAYKANAN", "label": "BupatiWAYKANAN", "shape": "dot", "title": "BupatiWAYKANAN"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "JahDmv", "label": "JahDmv", "shape": "dot", "title": "JahDmv"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiGUNUNGMAS", "label": "BupatiGUNUNGMAS", "shape": "dot", "title": "BupatiGUNUNGMAS"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiSukabumi", "label": "BupatiSukabumi", "shape": "dot", "title": "BupatiSukabumi"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "Bupati_BEKASI", "label": "Bupati_BEKASI", "shape": "dot", "title": "Bupati_BEKASI"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "BupatiROKANHULU", "label": "BupatiROKANHULU", "shape": "dot", "title": "BupatiROKANHULU"}, {"color": "#F5AEC1", "font": {"color": "#3C486B"}, "id": "WalikotaPalu", "label": "WalikotaPalu", "shape": "dot", "title": "WalikotaPalu"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": "pemkab_gresik_data", "to": "kemendagri"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "e100ss"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "PerpussipGresik"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "bnn_kab_Gresik"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "infobawean"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "pdamgresik"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "KelilingBawean"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "URCBIMAGresik"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "DumasGresik15"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "BPBDGRESIK"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "BPNGresik"}, {"arrows": "to", "from": "pemkab_gresik_data", "to": "CakYukGresik"}, {"arrows": "to", "from": "AHMADHa05846546", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "Dejuliancrypt", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "aida_nabiha", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "noviralnoj82528", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "BKurn16725", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "Lazzy_96", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "NurSali15536087", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "dzulkiflii95591", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "allie_photo", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "IkbalHemi", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "iruz17122002", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "AzamMachru84654", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "AliImro21597604", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "Wandy011897916", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "SuhartonoS68225", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "SigitAnang2015", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "LailiWardh26318", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "skyyystarr", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "yogisupra353", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "FortuneLampung", "to": "pemkab_gresik_data"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "Menkumham"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "Pemilu_KADA"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "NijaArmy"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "GUBERNURJATIM"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "Ariaethe"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "0xgo1"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "WalikotaTOMOHON"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "Bupati_TANJABAR"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiBulukumba"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "DppPDEMOKRAT"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "WalkotSurabaya"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiPESAWARAN"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiBEKASI"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiWAYKANAN"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "JahDmv"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiGUNUNGMAS"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiSukabumi"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "Bupati_BEKASI"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "BupatiROKANHULU"}, {"arrows": "to", "from": "BupatiGresik_data", "to": "WalikotaPalu"}, {"arrows": "to", "from": "hartonoekevin", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "hisar_sihotang", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "brodeny10", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "ekoekosebastia1", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "tenda_amiratent", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "tent_amira", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "Indah09040", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "f_nafieq", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "Aries_galauu", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "baharudin5991", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "mustajiaji27", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "CandraDifinubu3", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "seftian_anugrah", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "sadammpk", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "HCahaya99", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "Suwarno40165154", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "bumdespranti", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "Mmc99934673", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "adiRomadi13", "to": "BupatiGresik_data"}, {"arrows": "to", "from": "Roihatu14633837", "to": "BupatiGresik_data"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

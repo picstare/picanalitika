@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend:/backend/
+      - static_volume:/backend/static
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8501:8501
+    volumes:
+      - .:/app
+    depends_on:
+      - django
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+      # - static_volume:/usr/share/nginx/html/static
+      - static_volume:/home/backend/static
+
+    depends_on:
+      - django
+      - streamlit
+
+volumes:
+  static_volume: 
+
+
+
+
+
+    # image: postgres:13.3
+    # environment:
+    #   - POSTGRES_USER=your_postgres_user
+    #   - POSTGRES_PASSWORD=your_postgres_password
+    #   - POSTGRES_DB=your_postgres_db_name
+    # Remove the lines above if you're using SQLite
+    # Uncomment the lines below for SQLite

@@ -1,0 +1,7 @@
+vader_lexicon
+punkt
+words
+stopwords
+wordnet
+averaged_perceptron_tagger
+maxent_ne_chunker
