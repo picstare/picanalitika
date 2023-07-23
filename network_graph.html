@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#FF4500", "font": {"color": "white"}, "id": "Surya Brothers Production", "label": "Surya Brothers Production", "shape": "dot"}, {"color": "#FF4500", "font": {"color": "white"}, "id": "Rachart Channel", "label": "Rachart Channel", "shape": "dot"}, {"color": "#FF4500", "font": {"color": "white"}, "id": "Maintenance", "label": "Maintenance", "shape": "dot"}, {"color": "#FF4500", "font": {"color": "white"}, "id": "Tribunnews", "label": "Tribunnews", "shape": "dot"}, {"color": "#FF4500", "font": {"color": "white"}, "id": "KIRIMAN NETIZEN", "label": "KIRIMAN NETIZEN", "shape": "dot"}, {"color": "#FF4500", "font": {"color": "white"}, "id": "SIKIN amboncoy", "label": "SIKIN amboncoy", "shape": "dot"}, {"color": "#FF4500", "font": {"color": "white"}, "id": "Abiyasa Nusantara Majapahit", "label": "Abiyasa Nusantara Majapahit", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Ali Muhyar", "label": "Ali Muhyar", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "syaifa", "label": "syaifa", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Mafud Rido", "label": "Mafud Rido", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Tati Tati", "label": "Tati Tati", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Susilo ooo", "label": "Susilo ooo", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "ali fuadi", "label": "ali fuadi", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Almirah Channel", "label": "Almirah Channel", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Nanik Rochana", "label": "Nanik Rochana", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Ica Ainun", "label": "Ica Ainun", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Fajarari Nugroho", "label": "Fajarari Nugroho", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Yeti Sukaeti", "label": "Yeti Sukaeti", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "sam say", "label": "sam say", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Dower", "label": "Dower", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Sri Murni", "label": "Sri Murni", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Wati Inges", "label": "Wati Inges", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "TIARANT !", "label": "TIARANT !", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "NVNjune14", "label": "NVNjune14", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Benjol Jol", "label": "Benjol Jol", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "CIARARAMADHANI", "label": "CIARARAMADHANI", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "wow keren", "label": "wow keren", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Iwan Safii", "label": "Iwan Safii", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Bambang Suripto", "label": "Bambang Suripto", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Sahami Sham", "label": "Sahami Sham", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Rahmat Hidayat", "label": "Rahmat Hidayat", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "djakfar", "label": "djakfar", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Vika Oppo", "label": "Vika Oppo", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Ikhlas Ikhlas", "label": "Ikhlas Ikhlas", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "DayuAtu Life in Sydney", "label": "DayuAtu Life in Sydney", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Sika Riseta", "label": "Sika Riseta", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Alfa Reza", "label": "Alfa Reza", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Jumrizal Jumrizal", "label": "Jumrizal Jumrizal", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "logic", "label": "logic", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "shortscut", "label": "shortscut", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Sadung Jebred", "label": "Sadung Jebred", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Arif Zayn", "label": "Arif Zayn", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Ar\u029du\u03ae Pratama", "label": "Ar\u029du\u03ae Pratama", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "TheLast01", "label": "TheLast01", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Eko Setyobekti", "label": "Eko Setyobekti", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Makan", "label": "Makan", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "ANDI OFFICIAL2497", "label": "ANDI OFFICIAL2497", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Nilta Hdytl", "label": "Nilta Hdytl", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "vika farida", "label": "vika farida", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "channel gaya", "label": "channel gaya", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "tiarsa ketut", "label": "tiarsa ketut", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Gusti Arjun", "label": "Gusti Arjun", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Nyoman Sana", "label": "Nyoman Sana", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Rossi Aditya", "label": "Rossi Aditya", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Pak Sudi", "label": "Pak Sudi", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Indra Sigit", "label": "Indra Sigit", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Gusti bagus Sukrisna", "label": "Gusti bagus Sukrisna", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Gusti putu Kelab", "label": "Gusti putu Kelab", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Luken Zul", "label": "Luken Zul", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "novia novia", "label": "novia novia", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Ardi Adzom", "label": "Ardi Adzom", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Aris Susanto", "label": "Aris Susanto", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Na Bilah", "label": "Na Bilah", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Doel Moeiez", "label": "Doel Moeiez", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Sujadi H", "label": "Sujadi H", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "PT HBS Farm", "label": "PT HBS Farm", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Yusuf Arifin", "label": "Yusuf Arifin", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "MBAHENO BEJO", "label": "MBAHENO BEJO", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Sucipto Cip", "label": "Sucipto Cip", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Faw Zee", "label": "Faw Zee", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "JUMI ATIN", "label": "JUMI ATIN", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Parijah Orkes", "label": "Parijah Orkes", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "slamet rosyad", "label": "slamet rosyad", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Jem I", "label": "Jem I", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "acim", "label": "acim", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Pakde Topo", "label": "Pakde Topo", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Family Family", "label": "Family Family", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Mercuriara Aja", "label": "Mercuriara Aja", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Misbahudin Asror", "label": "Misbahudin Asror", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Trisula Weda Reborn", "label": "Trisula Weda Reborn", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Wiryo Aryantono", "label": "Wiryo Aryantono", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Prio Yono", "label": "Prio Yono", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Cak alam Alam", "label": "Cak alam Alam", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "TEGUH AKBAR", "label": "TEGUH AKBAR", "shape": "dot"}, {"color": "#1E90FF", "font": {"color": "white"}, "id": "Edisantuso Santuso", "label": "Edisantuso Santuso", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"from": "Rachart Channel", "to": "Ali Muhyar"}, {"from": "Rachart Channel", "to": "syaifa"}, {"from": "Rachart Channel", "to": "Mafud Rido"}, {"from": "Rachart Channel", "to": "Tati Tati"}, {"from": "Rachart Channel", "to": "Susilo ooo"}, {"from": "Rachart Channel", "to": "ali fuadi"}, {"from": "Rachart Channel", "to": "Almirah Channel"}, {"from": "Rachart Channel", "to": "Nanik Rochana"}, {"from": "Rachart Channel", "to": "Ica Ainun"}, {"from": "Rachart Channel", "to": "Fajarari Nugroho"}, {"from": "Rachart Channel", "to": "MBAHENO BEJO"}, {"from": "Rachart Channel", "to": "Sucipto Cip"}, {"from": "Rachart Channel", "to": "Faw Zee"}, {"from": "Rachart Channel", "to": "JUMI ATIN"}, {"from": "Rachart Channel", "to": "Parijah Orkes"}, {"from": "Rachart Channel", "to": "slamet rosyad"}, {"from": "Rachart Channel", "to": "Jem I"}, {"from": "Rachart Channel", "to": "acim"}, {"from": "Rachart Channel", "to": "Pakde Topo"}, {"from": "Tribunnews", "to": "Yeti Sukaeti"}, {"from": "Tribunnews", "to": "sam say"}, {"from": "Tribunnews", "to": "Dower"}, {"from": "Tribunnews", "to": "Sri Murni"}, {"from": "Tribunnews", "to": "Wati Inges"}, {"from": "Tribunnews", "to": "TIARANT !"}, {"from": "Tribunnews", "to": "NVNjune14"}, {"from": "Tribunnews", "to": "Benjol Jol"}, {"from": "Tribunnews", "to": "CIARARAMADHANI"}, {"from": "Tribunnews", "to": "Alfa Reza"}, {"from": "Tribunnews", "to": "Jumrizal Jumrizal"}, {"from": "Tribunnews", "to": "logic"}, {"from": "Tribunnews", "to": "shortscut"}, {"from": "Tribunnews", "to": "Sadung Jebred"}, {"from": "Tribunnews", "to": "Arif Zayn"}, {"from": "Tribunnews", "to": "Ar\u029du\u03ae Pratama"}, {"from": "Tribunnews", "to": "TheLast01"}, {"from": "Tribunnews", "to": "Eko Setyobekti"}, {"from": "Tribunnews", "to": "Makan"}, {"from": "Tribunnews", "to": "Luken Zul"}, {"from": "Tribunnews", "to": "novia novia"}, {"from": "Tribunnews", "to": "Ardi Adzom"}, {"from": "Tribunnews", "to": "Aris Susanto"}, {"from": "Tribunnews", "to": "Na Bilah"}, {"from": "Tribunnews", "to": "Doel Moeiez"}, {"from": "Tribunnews", "to": "Sujadi H"}, {"from": "Tribunnews", "to": "PT HBS Farm"}, {"from": "Tribunnews", "to": "Yusuf Arifin"}, {"from": "KIRIMAN NETIZEN", "to": "wow keren"}, {"from": "KIRIMAN NETIZEN", "to": "Iwan Safii"}, {"from": "KIRIMAN NETIZEN", "to": "Bambang Suripto"}, {"from": "KIRIMAN NETIZEN", "to": "Sahami Sham"}, {"from": "KIRIMAN NETIZEN", "to": "Rahmat Hidayat"}, {"from": "KIRIMAN NETIZEN", "to": "djakfar"}, {"from": "KIRIMAN NETIZEN", "to": "Vika Oppo"}, {"from": "KIRIMAN NETIZEN", "to": "Ikhlas Ikhlas"}, {"from": "KIRIMAN NETIZEN", "to": "DayuAtu Life in Sydney"}, {"from": "KIRIMAN NETIZEN", "to": "Sika Riseta"}, {"from": "SIKIN amboncoy", "to": "ANDI OFFICIAL2497"}, {"from": "SIKIN amboncoy", "to": "Nilta Hdytl"}, {"from": "SIKIN amboncoy", "to": "vika farida"}, {"from": "SIKIN amboncoy", "to": "channel gaya"}, {"from": "Abiyasa Nusantara Majapahit", "to": "tiarsa ketut"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Gusti Arjun"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Nyoman Sana"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Rossi Aditya"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Pak Sudi"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Indra Sigit"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Gusti bagus Sukrisna"}, {"from": "Abiyasa Nusantara Majapahit", "to": "Gusti putu Kelab"}, {"from": "Ali Muhyar", "to": "Family Family"}, {"from": "Ali Muhyar", "to": "Mercuriara Aja"}, {"from": "Ali Muhyar", "to": "Misbahudin Asror"}, {"from": "ali fuadi", "to": "ali fuadi"}, {"from": "wow keren", "to": "Trisula Weda Reborn"}, {"from": "wow keren", "to": "Wiryo Aryantono"}, {"from": "wow keren", "to": "Prio Yono"}, {"from": "wow keren", "to": "Cak alam Alam"}, {"from": "wow keren", "to": "TEGUH AKBAR"}, {"from": "MBAHENO BEJO", "to": "Edisantuso Santuso"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

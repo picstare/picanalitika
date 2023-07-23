@@ -1,5 +1,6 @@
 import scrapy
 import json
+from scrapy_playwright.page import PageMethod
 
 class InstagramSpider(scrapy.Spider):
     name = 'instagram'
@@ -8,7 +9,14 @@ class InstagramSpider(scrapy.Spider):
         username = getattr(self, 'username', None)
         if username is not None:
             url = f'https://www.instagram.com/{username}/'
-            yield scrapy.Request(url, callback=self.parse)
+            yield scrapy.Request(url, callback=self.parse,
+            meta={
+                "playwright": True,
+                "playwright_page_methods": [
+                    PageMethod("wait_for_selector", '.card-body'),
+                ],
+                 },
+        )
 
     def parse(self, response):
         if response.status == 403:

@@ -10,6 +10,7 @@ services:
     volumes:
       - ./backend:/backend/
       - static_volume:/backend/static
+    image: picstare/picanalitika_27276:django  # Moved image field outside the build section
 
   streamlit:
     build:
@@ -21,6 +22,7 @@ services:
       - .:/app
     depends_on:
       - django
+    image: picstare/picanalitika_27276:streamlit  # Moved image field outside the build section
 
   nginx:
     build:
@@ -30,15 +32,14 @@ services:
       - 80:80
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
-      # - static_volume:/usr/share/nginx/html/static
       - static_volume:/home/backend/static
-
     depends_on:
       - django
       - streamlit
+    image: picstare/picanalitika_27276:nginx  # Moved image field outside the build section
 
 volumes:
-  static_volume: 
+  static_volume:
 
 
 

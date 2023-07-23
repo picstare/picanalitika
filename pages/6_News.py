@@ -56,7 +56,12 @@ punctuation = "!\"$%&'()*+,-./:;<=>?[\\]^_`{|}~•@"
 
 
 st.set_page_config(page_title='picanalitika | News Analysis', page_icon=':newspaper:', layout='wide')
-st.title('News Analysis')
+a, b = st.columns([1, 10])
+with a:
+    st.image("img/newsicon.png", width=120)
+    st.text("")
+with b:
+    st.title("News Analysis")
 
 hide_st_style = """
             <style>
@@ -66,6 +71,8 @@ hide_st_style = """
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
+
+
 
 with st. sidebar:
     if st.button("Logout"):
@@ -342,6 +349,7 @@ with tab1:
         import plotly.graph_objects as go
         import dateparser
         import datetime
+        import pytz
 
         # Calculate the default start and end date as a 1-month range
         default_start_date = datetime.datetime.now().date() - datetime.timedelta(days=30)
@@ -362,20 +370,43 @@ with tab1:
                 date_string = item['date']
                 if date_string is not None:
                     parsed_date = dateparser.parse(date_string)
-                    if parsed_date is not None and start_date <= parsed_date <= end_date:
-                        for keyword in keywords:
-                            if keyword in item['content']:
-                                filtered_item = item.copy()
-                                filtered_item['date'] = parsed_date
-                                filtered_item['keyword'] = keyword
-                                filtered_data.append(filtered_item)
-                                break  # Only add the article once for each keyword
+                    if parsed_date is not None:
+                        # Convert parsed_date to offset-aware datetime
+                        parsed_date = parsed_date.astimezone(pytz.utc)
+
+                        # Ensure start_date and end_date are offset-aware datetime
+                        if not start_date.tzinfo:
+                            start_date = start_date.astimezone(pytz.utc)
+                        if not end_date.tzinfo:
+                            end_date = end_date.astimezone(pytz.utc)
+
+                        if start_date <= parsed_date <= end_date:
+                            for keyword in keywords:
+                                if keyword in item['content']:
+                                    filtered_item = item.copy()
+                                    filtered_item['date'] = parsed_date
+                                    filtered_item['keyword'] = keyword
+
+                                    # Check if 'tags' key exists in the item before adding it to filtered_data
+                                    if 'tags' in filtered_item:
+                                        filtered_item['tags'] = filtered_item['tags'] if isinstance(filtered_item['tags'], list) else []
+                                    else:
+                                        filtered_item['tags'] = []
+
+                                    filtered_data.append(filtered_item)
+                                    break  # Only add the article once for each keyword
             return filtered_data
+
 
         def plot_timeseries_chart(data, keywords, start_date, end_date):
             # Convert the "date" column to datetime type with timezone-aware values
             df = pd.DataFrame(data)
             df['date'] = pd.to_datetime(df['date'], errors='coerce', utc=True)
+
+            # Check if 'tags' column exists in the DataFrame
+            if 'tags' in df.columns:
+                # Apply lambda function only if 'tags' column exists
+                df['tags'] = df['tags'].apply(lambda x: x if isinstance(x, list) else [])
 
             # Group the data based on time series interval, keyword, and calculate the counts
             grouped_df = df.groupby(['keyword', pd.Grouper(key='date', freq='D')]).size().reset_index(name='count')
@@ -397,7 +428,7 @@ with tab1:
             )
 
             header_text = 'Time Series of News for Keywords: ' + ', '.join(keywords)
-            st.header(header_text)
+            st.subheader(header_text)
 
             # Display the chart
             st.plotly_chart(fig)
@@ -407,21 +438,26 @@ with tab1:
         data = load_data()
 
         # Sidebar filters
-        st.sidebar.header("Search Filters")
-        start_date = st.sidebar.date_input("Start Date", default_start_date)
-        end_date = st.sidebar.date_input("End Date", default_end_date)
+        st.header('Time Series Analysis')
+
+        keywords = st.text_input("Keywords (comma-separated)").split(',')
+     
+        start_date = st.date_input("Start Date", default_start_date)
+        end_date = st.date_input("End Date", default_end_date)
 
         # Convert start_date and end_date to datetime objects with UTC timezone
         start_date = pd.to_datetime(start_date).tz_localize('UTC')
         end_date = pd.to_datetime(end_date).tz_localize('UTC')
 
-        keywords = st.sidebar.text_input("Keywords (comma-separated)").split(',')
 
         # Filter the data based on the filters
         filtered_data = filter_data(data, start_date, end_date, keywords)
 
         # Convert the filtered data to DataFrame and apply fixes for Arrow compatibility
+        # Convert the filtered data to DataFrame and apply fixes for Arrow compatibility
         df = pd.DataFrame(filtered_data)
+        st.dataframe(df.columns)
+        print(df.columns)  # Print the columns of the DataFrame
         df['tags'] = df['tags'].apply(lambda x: x if isinstance(x, list) else [])
 
         # Plot the time series chart
@@ -433,7 +469,7 @@ with tab1:
         st.dataframe(df)
         print(df)
 
-
+###########################################TOPIC MODEL########################################################
 
 
         from gensim import corpora
@@ -554,6 +590,7 @@ with tab1:
 #######################SENTIMENTANALISIS#############################
         from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+        st.header ('Sentiment Analysis')
         # Create an instance of the VADER sentiment analyzer
         analyzer = SentimentIntensityAnalyzer()
 
@@ -567,150 +604,58 @@ with tab1:
         df['Sentiment'] = sentiments
 
         # Display the DataFrame with sentiment scores
-        st.write("Sentiment Analysis Results:")
-        st.dataframe(df[['cleaned_content', 'Sentiment']])
+        st.subheader("Sentiment Analysis Results:")
+        
+       
 
         # Extract the compound scores from the 'Sentiment' column
         compound_scores = df['Sentiment'].apply(lambda x: x['compound'])
 
-        # Calculate the average sentiment score
-        average_sentiment = compound_scores.mean()
+        col1, col2 =st.columns(2)
 
-        # Display the average sentiment score
-        st.write("Average Sentiment Score:")
-        st.write(average_sentiment)
+        with col1:
+
+            # Calculate the average sentiment score
+            average_sentiment = compound_scores.mean()
+            # Display the average sentiment score
+            st.write("Average Sentiment Score:", average_sentiment)
+
+            st.dataframe(df[['cleaned_content', 'Sentiment']])
+
+            
 
         import plotly.graph_objects as go
 
-        # Calculate the count of sentiments
-        sentiment_counts = df['Sentiment'].apply(lambda x: x['compound'] > 0).value_counts()
-        positive_count = sentiment_counts.get(True, 0)
-        negative_count = sentiment_counts.get(False, 0)
-        neutral_count = len(df) - positive_count - negative_count
+        with col2:
 
-        # Create a pie chart
-        fig = go.Figure(data=go.Pie(
-            labels=['Positive', 'Negative', 'Neutral'],
-            values=[positive_count, negative_count, neutral_count],
-            hole=0.4
-        ))
+            # Calculate the count of sentiments
+            sentiment_counts = df['Sentiment'].apply(lambda x: x['compound'] > 0).value_counts()
+            positive_count = sentiment_counts.get(True, 0)
+            negative_count = sentiment_counts.get(False, 0)
+            neutral_count = len(df) - positive_count - negative_count
 
-        # Set the chart title
-        fig.update_layout(
-            title="Sentiment Analysis of News",
-            showlegend=True,
+            # Create a pie chart
+            fig = go.Figure(data=go.Pie(
+                labels=['Positive', 'Negative', 'Neutral'],
+                values=[positive_count, negative_count, neutral_count],
+                hole=0.4
+            ))
+
+            # Set the chart title
+            fig.update_layout(
+                title="Sentiment Analysis of News",
+                showlegend=True,
+                
+            )
+
+            # Display the pie chart
             
-        )
-
-        # Display the pie chart
-        
-        st.plotly_chart(fig, width=1000)
+            st.plotly_chart(fig, width=1000)
 
 
 ##############################################################################################
 
-    #    # Calculate the default start and end date as a 1-month range
-    #     import re
-
-    #     default_start_date = datetime.datetime.now() - datetime.timedelta(days=30)
-    #     default_start_date = default_start_date.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(datetime.timezone.utc)
-    #     default_end_date = datetime.datetime.now()
-    #     default_end_date = default_end_date.replace(hour=23, minute=59, second=59, microsecond=999999).astimezone(datetime.timezone.utc)
-
-    #     def load_data():
-    #         file_list = glob.glob("newscraped/*.json")
-    #         data = []
-    #         for file_path in file_list:
-    #             print(f"Processing file: {file_path}")
-    #             with open(file_path, 'r') as f:
-    #                 content = json.load(f)
-    #                 print(f"Content: {content}")
-    #                 for item in content:
-    #                     if 'date' in item:
-    #                         date_string = item['date']
-    #                         if isinstance(date_string, datetime.datetime):
-    #                             date_string = date_string.strftime("%a, %d %b %Y %H:%M:%S %Z")
-    #                         pattern = r"([\w\s]+),\s(\d+\s\w+\s\d+)\s(\d+:\d+)\s\w+"
-    #                         match = re.search(pattern, date_string)
-    #                         if match:
-    #                             day = match.group(1)
-    #                             date = match.group(2)
-    #                             time = match.group(3)
-    #                             formatted_date = f"{date} {time}"
-    #                             item['date'] = pd.to_datetime(formatted_date, errors='coerce', utc=True)
-    #                             data.append(item)
-    #                         else:
-    #                             print(f"Skipping item with invalid date format: {item}")
-    #                     else:
-    #                         print(f"Skipping item without date: {item}")
-    #         return data
-
-    #     def filter_data(data, start_date, end_date, keywords):
-    #         filtered_data = []
-    #         for item in data:
-    #             date_string = item['date']
-    #             if date_string is not None:
-    #                 date_string = date_string.replace("Kompas.com - ", "")
-    #                 parsed_date = dateparser.parse(date_string, settings={'RETURN_AS_TIMEZONE_AWARE': True})
-    #                 if start_date <= parsed_date <= end_date:
-    #                     if any(keyword in item['content'] for keyword in keywords):
-    #                         item['date'] = parsed_date
-    #                         filtered_data.append(item)
-    #         return filtered_data
-
-    #     def plot_timeseries_chart(filtered_data, keywords):
-    #         df = pd.DataFrame(filtered_data)
-    #         df['date'] = pd.to_datetime(df['date'], errors='coerce', utc=True)
-
-    #         # Create an instance of the VADER sentiment analyzer
-    #         analyzer = SentimentIntensityAnalyzer()
-
-    #         # Perform sentiment analysis on each document in the cleaned_content column
-    #         sentiments = []
-    #         for doc in df['cleaned_content']:
-    #             sentiment_scores = analyzer.polarity_scores(doc)
-    #             sentiments.append(sentiment_scores)
-
-    #         # Add the sentiment scores to the DataFrame
-    #         df['Sentiment'] = sentiments
-
-    #         # Group the data by date and calculate the average sentiment scores
-    #         df_sentiment = df.groupby(pd.Grouper(key='date', freq='D')).agg({
-    #             'Sentiment': lambda x: x.apply(lambda score: score['compound']),
-    #             'content': 'count'
-    #         }).reset_index()
-
-    #         # Map sentiment score to sentiment category (negative, neutral, positive)
-    #         df_sentiment['Sentiment Category'] = df_sentiment['Sentiment'].apply(lambda score: 'Negative' if score < 0 else 'Positive' if score > 0 else 'Neutral')
-
-    #         # Plot the timeseries chart
-    #         fig = go.Figure()
-    #         fig.add_trace(go.Scatter(x=df_sentiment['date'], y=df_sentiment['Sentiment'], mode='lines', name='Sentiment'))
-    #         fig.update_layout(
-    #             title="Sentiment Analysis Over Time",
-    #             xaxis_title="Date",
-    #             yaxis_title="Sentiment Score",
-    #             showlegend=True
-    #         )
-
-    #         # Add markers for sentiment categories
-    #         for category in ['Negative', 'Positive', 'Neutral']:
-    #             category_data = df_sentiment[df_sentiment['Sentiment Category'] == category]
-    #             fig.add_trace(go.Scatter(x=category_data['date'], y=category_data['Sentiment'],
-    #                                     mode='markers', name=category, marker=dict(size=8)))
-
-    #         st.plotly_chart(fig, use_container_width=True)
-
-    #     # Load the data
-    #     data = load_data()
-
-    #     # Filter the data based on the specified date range and keywords
-    #     filtered_data = filter_data(data, default_start_date, default_end_date, keywords=[])
-
-    #     # Plot the timeseries chart
-    #     plot_timeseries_chart(filtered_data, keywords=[])
-
-
+    
 
 ##########################################################
 with tab2:
@@ -733,7 +678,7 @@ with tab2:
         # Add more spiders here if needed
     }
 
-    SCRAPY_EXECUTABLE = r"/usr/local/bin/scrapy"  # Specify the absolute path to the Scrapy executable
+    SCRAPY_EXECUTABLE = r".venv/bin/scrapy"  # Specify the absolute path to the Scrapy executable
     
     @st.cache_resource
     def run_spider(spider_name, query):

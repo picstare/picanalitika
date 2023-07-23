@@ -1,508 +1,452 @@
 {
-    "name": "Bupati Gresik ",
-    "description": "",
-    "followers": [
-        "hartonoekevin",
-        "hisar_sihotang",
-        "brodeny10",
-        "ekoekosebastia1",
-        "tenda_amiratent",
-        "tent_amira",
-        "Indah09040",
-        "f_nafieq",
-        "Aries_galauu",
-        "baharudin5991",
-        "mustajiaji27",
-        "CandraDifinubu3",
-        "seftian_anugrah",
-        "sadammpk",
-        "HCahaya99",
-        "Suwarno40165154",
-        "bumdespranti",
-        "Mmc99934673",
-        "adiRomadi13",
-        "Roihatu14633837"
-    ],
-    "following": [
-        "Menkumham",
-        "Pemilu_KADA",
-        "NijaArmy",
-        "GUBERNURJATIM",
-        "Ariaethe",
-        "0xgo1",
-        "WalikotaTOMOHON",
-        "Bupati_TANJABAR",
-        "BupatiBulukumba",
-        "DppPDEMOKRAT",
-        "WalkotSurabaya",
-        "BupatiPESAWARAN",
-        "BupatiBEKASI",
-        "BupatiWAYKANAN",
-        "JahDmv",
-        "BupatiGUNUNGMAS",
-        "BupatiSukabumi",
-        "Bupati_BEKASI",
-        "BupatiROKANHULU",
-        "WalikotaPalu"
-    ],
-    "tweets": [
-        {
-            "created_at": "Fri Nov 22 06:11:38 +0000 2013",
-            "id": 403767711403999232,
-            "id_str": "403767711403999232",
-            "full_text": "RT @WSJ: Two weeks after Typhoon Haiyan hit and displaced 4.4 million people, some still wait for aid. http://t.co/rtXO3FwIPg",
-            "truncated": false,
-            "display_text_range": [
-                0,
-                125
-            ],
-            "entities": {
-                "hashtags": [],
-                "symbols": [],
-                "user_mentions": [
-                    {
-                        "screen_name": "WSJ",
-                        "name": "The Wall Street Journal",
-                        "id": 3108351,
-                        "id_str": "3108351",
-                        "indices": [
-                            3,
-                            7
-                        ]
-                    }
-                ],
-                "urls": [
-                    {
-                        "url": "http://t.co/rtXO3FwIPg",
-                        "expanded_url": "http://on.wsj.com/18sdt9m",
-                        "display_url": "on.wsj.com/18sdt9m",
-                        "indices": [
-                            103,
-                            125
-                        ]
-                    }
-                ]
-            },
-            "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
-            "in_reply_to_status_id": null,
-            "in_reply_to_status_id_str": null,
-            "in_reply_to_user_id": null,
-            "in_reply_to_user_id_str": null,
-            "in_reply_to_screen_name": null,
-            "user": {
-                "id": 2208415608,
-                "id_str": "2208415608",
-                "name": "Bupati Gresik ",
-                "screen_name": "BupatiGresik",
-                "location": "",
-                "description": "",
-                "url": null,
-                "entities": {
-                    "description": {
-                        "urls": []
-                    }
-                },
-                "protected": false,
-                "followers_count": 267,
-                "friends_count": 92,
-                "listed_count": 1,
-                "created_at": "Fri Nov 22 06:04:26 +0000 2013",
-                "favourites_count": 2,
-                "utc_offset": null,
-                "time_zone": null,
-                "geo_enabled": false,
-                "verified": false,
-                "statuses_count": 7,
-                "lang": null,
-                "contributors_enabled": false,
-                "is_translator": false,
-                "is_translation_enabled": false,
-                "profile_background_color": "C0DEED",
-                "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
-                "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
-                "profile_background_tile": false,
-                "profile_image_url": "http://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
-                "profile_image_url_https": "https://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
-                "profile_banner_url": "https://pbs.twimg.com/profile_banners/2208415608/1385100327",
-                "profile_link_color": "1DA1F2",
-                "profile_sidebar_border_color": "C0DEED",
-                "profile_sidebar_fill_color": "DDEEF6",
-                "profile_text_color": "333333",
-                "profile_use_background_image": true,
-                "has_extended_profile": false,
-                "default_profile": true,
-                "default_profile_image": false,
-                "following": false,
-                "follow_request_sent": false,
-                "notifications": false,
-                "translator_type": "none",
-                "withheld_in_countries": []
-            },
-            "geo": null,
-            "coordinates": null,
-            "place": null,
-            "contributors": null,
-            "retweeted_status": {
-                "created_at": "Fri Nov 22 06:00:04 +0000 2013",
-                "id": 403764800779747328,
-                "id_str": "403764800779747328",
-                "full_text": "Two weeks after Typhoon Haiyan hit and displaced 4.4 million people, some still wait for aid. http://t.co/rtXO3FwIPg",
-                "truncated": false,
-                "display_text_range": [
-                    0,
-                    116
-                ],
-                "entities": {
-                    "hashtags": [],
-                    "symbols": [],
-                    "user_mentions": [],
-                    "urls": [
-                        {
-                            "url": "http://t.co/rtXO3FwIPg",
-                            "expanded_url": "http://on.wsj.com/18sdt9m",
-                            "display_url": "on.wsj.com/18sdt9m",
-                            "indices": [
-                                94,
-                                116
-                            ]
-                        }
-                    ]
-                },
-                "source": "<a href=\"http://www.socialflow.com\" rel=\"nofollow\">SocialFlow</a>",
-                "in_reply_to_status_id": null,
-                "in_reply_to_status_id_str": null,
-                "in_reply_to_user_id": null,
-                "in_reply_to_user_id_str": null,
-                "in_reply_to_screen_name": null,
-                "user": {
-                    "id": 3108351,
-                    "id_str": "3108351",
-                    "name": "The Wall Street Journal",
-                    "screen_name": "WSJ",
-                    "location": "New York, NY",
-                    "description": "Sign up for our newsletters and alerts: https://t.co/QevH0DLisA | Got a tip? https://t.co/iXIigdOLPr | For WSJ customer support: https://t.co/DZgH9n4vAI",
-                    "url": "https://t.co/9rMrYLEXTt",
-                    "entities": {
-                        "url": {
-                            "urls": [
-                                {
-                                    "url": "https://t.co/9rMrYLEXTt",
-                                    "expanded_url": "http://wsj.com",
-                                    "display_url": "wsj.com",
-                                    "indices": [
-                                        0,
-                                        23
-                                    ]
-                                }
-                            ]
-                        },
-                        "description": {
-                            "urls": [
-                                {
-                                    "url": "https://t.co/QevH0DLisA",
-                                    "expanded_url": "http://wsj.com/newsletters",
-                                    "display_url": "wsj.com/newsletters",
-                                    "indices": [
-                                        40,
-                                        63
-                                    ]
-                                },
-                                {
-                                    "url": "https://t.co/iXIigdOLPr",
-                                    "expanded_url": "http://wsj.com/tips",
-                                    "display_url": "wsj.com/tips",
-                                    "indices": [
-                                        77,
-                                        100
-                                    ]
-                                },
-                                {
-                                    "url": "https://t.co/DZgH9n4vAI",
-                                    "expanded_url": "http://customercenter.wsj.com",
-                                    "display_url": "customercenter.wsj.com",
-                                    "indices": [
-                                        129,
-                                        152
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "protected": false,
-                    "followers_count": 20520627,
-                    "friends_count": 1095,
-                    "listed_count": 128921,
-                    "created_at": "Sun Apr 01 06:22:13 +0000 2007",
-                    "favourites_count": 1133,
-                    "utc_offset": null,
-                    "time_zone": null,
-                    "geo_enabled": true,
-                    "verified": false,
-                    "statuses_count": 409758,
-                    "lang": null,
-                    "contributors_enabled": false,
-                    "is_translator": false,
-                    "is_translation_enabled": true,
-                    "profile_background_color": "EDF2F5",
-                    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme14/bg.gif",
-                    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme14/bg.gif",
-                    "profile_background_tile": false,
-                    "profile_image_url": "http://pbs.twimg.com/profile_images/971415515754266624/zCX0q9d5_normal.jpg",
-                    "profile_image_url_https": "https://pbs.twimg.com/profile_images/971415515754266624/zCX0q9d5_normal.jpg",
-                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/3108351/1680557947",
-                    "profile_link_color": "1164B8",
-                    "profile_sidebar_border_color": "FFFFFF",
-                    "profile_sidebar_fill_color": "EFEFEF",
-                    "profile_text_color": "333333",
-                    "profile_use_background_image": false,
-                    "has_extended_profile": false,
-                    "default_profile": false,
-                    "default_profile_image": false,
-                    "following": false,
-                    "follow_request_sent": false,
-                    "notifications": false,
-                    "translator_type": "regular",
-                    "withheld_in_countries": []
-                },
-                "geo": null,
-                "coordinates": null,
-                "place": null,
-                "contributors": null,
-                "is_quote_status": false,
-                "retweet_count": 84,
-                "favorite_count": 19,
-                "favorited": false,
-                "retweeted": false,
-                "possibly_sensitive": false,
-                "lang": "en"
-            },
-            "is_quote_status": false,
-            "retweet_count": 84,
-            "favorite_count": 0,
-            "favorited": false,
-            "retweeted": false,
-            "possibly_sensitive": false,
-            "lang": "en"
+  "name": "Bupati Gresik ",
+  "description": "",
+  "followers": [
+    "HudaViog73123",
+    "hartonoekevin",
+    "hisar_sihotang",
+    "brodeny10",
+    "ekoekosebastia1",
+    "tenda_amiratent",
+    "tent_amira",
+    "Indah09040",
+    "f_nafieq",
+    "Aries_galauu",
+    "baharudin5991",
+    "mustajiaji27",
+    "CandraDifinubu3",
+    "seftian_anugrah",
+    "sadammpk",
+    "HCahaya99",
+    "Suwarno40165154",
+    "bumdespranti",
+    "Mmc99934673",
+    "adiRomadi13"
+  ],
+  "following": [
+    "Menkumham",
+    "Pemilu_KADA",
+    "NijaArmy",
+    "GUBERNURJATIM",
+    "Ariaethe",
+    "0xgo1",
+    "WalikotaTOMOHON",
+    "Bupati_TANJABAR",
+    "BupatiBulukumba",
+    "DppPDEMOKRAT",
+    "WalkotSurabaya",
+    "BupatiPESAWARAN",
+    "BupatiBEKASI",
+    "BupatiWAYKANAN",
+    "JahDmv",
+    "BupatiGUNUNGMAS",
+    "BupatiSukabumi",
+    "Bupati_BEKASI",
+    "BupatiROKANHULU",
+    "WalikotaPalu"
+  ],
+  "tweets": [
+    {
+      "created_at": "Fri Nov 22 06:11:38 +0000 2013",
+      "id": 403767711403999232,
+      "id_str": "403767711403999232",
+      "full_text": "RT @WSJ: Two weeks after Typhoon Haiyan hit and displaced 4.4 million people, some still wait for aid. http://t.co/rtXO3FwIPg",
+      "truncated": false,
+      "display_text_range": [0, 125],
+      "entities": {
+        "hashtags": [],
+        "symbols": [],
+        "user_mentions": [
+          {
+            "screen_name": "WSJ",
+            "name": "The Wall Street Journal",
+            "id": 3108351,
+            "id_str": "3108351",
+            "indices": [3, 7]
+          }
+        ],
+        "urls": [
+          {
+            "url": "http://t.co/rtXO3FwIPg",
+            "expanded_url": "http://on.wsj.com/18sdt9m",
+            "display_url": "on.wsj.com/18sdt9m",
+            "indices": [103, 125]
+          }
+        ]
+      },
+      "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+      "in_reply_to_status_id": null,
+      "in_reply_to_status_id_str": null,
+      "in_reply_to_user_id": null,
+      "in_reply_to_user_id_str": null,
+      "in_reply_to_screen_name": null,
+      "user": {
+        "id": 2208415608,
+        "id_str": "2208415608",
+        "name": "Bupati Gresik ",
+        "screen_name": "BupatiGresik",
+        "location": "",
+        "description": "",
+        "url": null,
+        "entities": { "description": { "urls": [] } },
+        "protected": false,
+        "followers_count": 267,
+        "friends_count": 92,
+        "listed_count": 1,
+        "created_at": "Fri Nov 22 06:04:26 +0000 2013",
+        "favourites_count": 2,
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": false,
+        "verified": false,
+        "statuses_count": 7,
+        "lang": null,
+        "contributors_enabled": false,
+        "is_translator": false,
+        "is_translation_enabled": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/2208415608/1385100327",
+        "profile_link_color": "1DA1F2",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "has_extended_profile": false,
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": false,
+        "follow_request_sent": false,
+        "notifications": false,
+        "translator_type": "none",
+        "withheld_in_countries": []
+      },
+      "geo": null,
+      "coordinates": null,
+      "place": null,
+      "contributors": null,
+      "retweeted_status": {
+        "created_at": "Fri Nov 22 06:00:04 +0000 2013",
+        "id": 403764800779747328,
+        "id_str": "403764800779747328",
+        "full_text": "Two weeks after Typhoon Haiyan hit and displaced 4.4 million people, some still wait for aid. http://t.co/rtXO3FwIPg",
+        "truncated": false,
+        "display_text_range": [0, 116],
+        "entities": {
+          "hashtags": [],
+          "symbols": [],
+          "user_mentions": [],
+          "urls": [
+            {
+              "url": "http://t.co/rtXO3FwIPg",
+              "expanded_url": "http://on.wsj.com/18sdt9m",
+              "display_url": "on.wsj.com/18sdt9m",
+              "indices": [94, 116]
+            }
+          ]
         },
-        {
-            "created_at": "Fri Nov 22 06:10:49 +0000 2013",
-            "id": 403767507112042496,
-            "id_str": "403767507112042496",
-            "full_text": "RT @CNN: What happened to the pink suit Jacqueline Kennedy was wearing when JFK was shot? http://t.co/iKdkwpr5Lu",
-            "truncated": false,
-            "display_text_range": [
-                0,
-                112
-            ],
-            "entities": {
-                "hashtags": [],
-                "symbols": [],
-                "user_mentions": [
-                    {
-                        "screen_name": "CNN",
-                        "name": "CNN",
-                        "id": 759251,
-                        "id_str": "759251",
-                        "indices": [
-                            3,
-                            7
-                        ]
-                    }
-                ],
-                "urls": [
-                    {
-                        "url": "http://t.co/iKdkwpr5Lu",
-                        "expanded_url": "http://cnn.it/1g0p0y7",
-                        "display_url": "cnn.it/1g0p0y7",
-                        "indices": [
-                            90,
-                            112
-                        ]
-                    }
-                ]
+        "source": "<a href=\"http://www.socialflow.com\" rel=\"nofollow\">SocialFlow</a>",
+        "in_reply_to_status_id": null,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id": null,
+        "in_reply_to_user_id_str": null,
+        "in_reply_to_screen_name": null,
+        "user": {
+          "id": 3108351,
+          "id_str": "3108351",
+          "name": "The Wall Street Journal",
+          "screen_name": "WSJ",
+          "location": "New York, NY",
+          "description": "Sign up for our newsletters and alerts: https://t.co/QevH0DLisA | Got a tip? https://t.co/iXIigdOLPr | For WSJ customer support: https://t.co/DZgH9n4vAI",
+          "url": "https://t.co/9rMrYLEXTt",
+          "entities": {
+            "url": {
+              "urls": [
+                {
+                  "url": "https://t.co/9rMrYLEXTt",
+                  "expanded_url": "http://wsj.com",
+                  "display_url": "wsj.com",
+                  "indices": [0, 23]
+                }
+              ]
             },
-            "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
-            "in_reply_to_status_id": null,
-            "in_reply_to_status_id_str": null,
-            "in_reply_to_user_id": null,
-            "in_reply_to_user_id_str": null,
-            "in_reply_to_screen_name": null,
-            "user": {
-                "id": 2208415608,
-                "id_str": "2208415608",
-                "name": "Bupati Gresik ",
-                "screen_name": "BupatiGresik",
-                "location": "",
-                "description": "",
-                "url": null,
-                "entities": {
-                    "description": {
-                        "urls": []
-                    }
+            "description": {
+              "urls": [
+                {
+                  "url": "https://t.co/QevH0DLisA",
+                  "expanded_url": "http://wsj.com/newsletters",
+                  "display_url": "wsj.com/newsletters",
+                  "indices": [40, 63]
                 },
-                "protected": false,
-                "followers_count": 267,
-                "friends_count": 92,
-                "listed_count": 1,
-                "created_at": "Fri Nov 22 06:04:26 +0000 2013",
-                "favourites_count": 2,
-                "utc_offset": null,
-                "time_zone": null,
-                "geo_enabled": false,
-                "verified": false,
-                "statuses_count": 7,
-                "lang": null,
-                "contributors_enabled": false,
-                "is_translator": false,
-                "is_translation_enabled": false,
-                "profile_background_color": "C0DEED",
-                "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
-                "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
-                "profile_background_tile": false,
-                "profile_image_url": "http://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
-                "profile_image_url_https": "https://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
-                "profile_banner_url": "https://pbs.twimg.com/profile_banners/2208415608/1385100327",
-                "profile_link_color": "1DA1F2",
-                "profile_sidebar_border_color": "C0DEED",
-                "profile_sidebar_fill_color": "DDEEF6",
-                "profile_text_color": "333333",
-                "profile_use_background_image": true,
-                "has_extended_profile": false,
-                "default_profile": true,
-                "default_profile_image": false,
-                "following": false,
-                "follow_request_sent": false,
-                "notifications": false,
-                "translator_type": "none",
-                "withheld_in_countries": []
+                {
+                  "url": "https://t.co/iXIigdOLPr",
+                  "expanded_url": "http://wsj.com/tips",
+                  "display_url": "wsj.com/tips",
+                  "indices": [77, 100]
+                },
+                {
+                  "url": "https://t.co/DZgH9n4vAI",
+                  "expanded_url": "http://customercenter.wsj.com",
+                  "display_url": "customercenter.wsj.com",
+                  "indices": [129, 152]
+                }
+              ]
+            }
+          },
+          "protected": false,
+          "followers_count": 20520627,
+          "friends_count": 1095,
+          "listed_count": 128921,
+          "created_at": "Sun Apr 01 06:22:13 +0000 2007",
+          "favourites_count": 1133,
+          "utc_offset": null,
+          "time_zone": null,
+          "geo_enabled": true,
+          "verified": false,
+          "statuses_count": 409758,
+          "lang": null,
+          "contributors_enabled": false,
+          "is_translator": false,
+          "is_translation_enabled": true,
+          "profile_background_color": "EDF2F5",
+          "profile_background_image_url": "http://abs.twimg.com/images/themes/theme14/bg.gif",
+          "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme14/bg.gif",
+          "profile_background_tile": false,
+          "profile_image_url": "http://pbs.twimg.com/profile_images/971415515754266624/zCX0q9d5_normal.jpg",
+          "profile_image_url_https": "https://pbs.twimg.com/profile_images/971415515754266624/zCX0q9d5_normal.jpg",
+          "profile_banner_url": "https://pbs.twimg.com/profile_banners/3108351/1680557947",
+          "profile_link_color": "1164B8",
+          "profile_sidebar_border_color": "FFFFFF",
+          "profile_sidebar_fill_color": "EFEFEF",
+          "profile_text_color": "333333",
+          "profile_use_background_image": false,
+          "has_extended_profile": false,
+          "default_profile": false,
+          "default_profile_image": false,
+          "following": false,
+          "follow_request_sent": false,
+          "notifications": false,
+          "translator_type": "regular",
+          "withheld_in_countries": []
+        },
+        "geo": null,
+        "coordinates": null,
+        "place": null,
+        "contributors": null,
+        "is_quote_status": false,
+        "retweet_count": 84,
+        "favorite_count": 19,
+        "favorited": false,
+        "retweeted": false,
+        "possibly_sensitive": false,
+        "lang": "en"
+      },
+      "is_quote_status": false,
+      "retweet_count": 84,
+      "favorite_count": 0,
+      "favorited": false,
+      "retweeted": false,
+      "possibly_sensitive": false,
+      "lang": "en"
+    },
+    {
+      "created_at": "Fri Nov 22 06:10:49 +0000 2013",
+      "id": 403767507112042496,
+      "id_str": "403767507112042496",
+      "full_text": "RT @CNN: What happened to the pink suit Jacqueline Kennedy was wearing when JFK was shot? http://t.co/iKdkwpr5Lu",
+      "truncated": false,
+      "display_text_range": [0, 112],
+      "entities": {
+        "hashtags": [],
+        "symbols": [],
+        "user_mentions": [
+          {
+            "screen_name": "CNN",
+            "name": "CNN",
+            "id": 759251,
+            "id_str": "759251",
+            "indices": [3, 7]
+          }
+        ],
+        "urls": [
+          {
+            "url": "http://t.co/iKdkwpr5Lu",
+            "expanded_url": "http://cnn.it/1g0p0y7",
+            "display_url": "cnn.it/1g0p0y7",
+            "indices": [90, 112]
+          }
+        ]
+      },
+      "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+      "in_reply_to_status_id": null,
+      "in_reply_to_status_id_str": null,
+      "in_reply_to_user_id": null,
+      "in_reply_to_user_id_str": null,
+      "in_reply_to_screen_name": null,
+      "user": {
+        "id": 2208415608,
+        "id_str": "2208415608",
+        "name": "Bupati Gresik ",
+        "screen_name": "BupatiGresik",
+        "location": "",
+        "description": "",
+        "url": null,
+        "entities": { "description": { "urls": [] } },
+        "protected": false,
+        "followers_count": 267,
+        "friends_count": 92,
+        "listed_count": 1,
+        "created_at": "Fri Nov 22 06:04:26 +0000 2013",
+        "favourites_count": 2,
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": false,
+        "verified": false,
+        "statuses_count": 7,
+        "lang": null,
+        "contributors_enabled": false,
+        "is_translator": false,
+        "is_translation_enabled": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/378800000773120150/541ec6409a88020873ca48350f97108f_normal.jpeg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/2208415608/1385100327",
+        "profile_link_color": "1DA1F2",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "has_extended_profile": false,
+        "default_profile": true,
+        "default_profile_image": false,
+        "following": false,
+        "follow_request_sent": false,
+        "notifications": false,
+        "translator_type": "none",
+        "withheld_in_countries": []
+      },
+      "geo": null,
+      "coordinates": null,
+      "place": null,
+      "contributors": null,
+      "retweeted_status": {
+        "created_at": "Fri Nov 22 06:08:03 +0000 2013",
+        "id": 403766810451116032,
+        "id_str": "403766810451116032",
+        "full_text": "What happened to the pink suit Jacqueline Kennedy was wearing when JFK was shot? http://t.co/iKdkwpr5Lu",
+        "truncated": false,
+        "display_text_range": [0, 103],
+        "entities": {
+          "hashtags": [],
+          "symbols": [],
+          "user_mentions": [],
+          "urls": [
+            {
+              "url": "http://t.co/iKdkwpr5Lu",
+              "expanded_url": "http://cnn.it/1g0p0y7",
+              "display_url": "cnn.it/1g0p0y7",
+              "indices": [81, 103]
+            }
+          ]
+        },
+        "source": "<a href=\"https://about.twitter.com/products/tweetdeck\" rel=\"nofollow\">TweetDeck</a>",
+        "in_reply_to_status_id": null,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id": null,
+        "in_reply_to_user_id_str": null,
+        "in_reply_to_screen_name": null,
+        "user": {
+          "id": 759251,
+          "id_str": "759251",
+          "name": "CNN",
+          "screen_name": "CNN",
+          "location": "",
+          "description": "It\u2019s our job to #GoThere & tell the most difficult stories. For breaking news, follow @CNNBRK and download our app https://t.co/ceNBoNi8y6",
+          "url": "https://t.co/imGp4Ieixi",
+          "entities": {
+            "url": {
+              "urls": [
+                {
+                  "url": "https://t.co/imGp4Ieixi",
+                  "expanded_url": "http://www.cnn.com",
+                  "display_url": "cnn.com",
+                  "indices": [0, 23]
+                }
+              ]
             },
-            "geo": null,
-            "coordinates": null,
-            "place": null,
-            "contributors": null,
-            "retweeted_status": {
-                "created_at": "Fri Nov 22 06:08:03 +0000 2013",
-                "id": 403766810451116032,
-                "id_str": "403766810451116032",
-                "full_text": "What happened to the pink suit Jacqueline Kennedy was wearing when JFK was shot? http://t.co/iKdkwpr5Lu",
-                "truncated": false,
-                "display_text_range": [
-                    0,
-                    103
-                ],
-                "entities": {
-                    "hashtags": [],
-                    "symbols": [],
-                    "user_mentions": [],
-                    "urls": [
-                        {
-                            "url": "http://t.co/iKdkwpr5Lu",
-                            "expanded_url": "http://cnn.it/1g0p0y7",
-                            "display_url": "cnn.it/1g0p0y7",
-                            "indices": [
-                                81,
-                                103
-                            ]
-                        }
-                    ]
-                },
-                "source": "<a href=\"https://about.twitter.com/products/tweetdeck\" rel=\"nofollow\">TweetDeck</a>",
-                "in_reply_to_status_id": null,
-                "in_reply_to_status_id_str": null,
-                "in_reply_to_user_id": null,
-                "in_reply_to_user_id_str": null,
-                "in_reply_to_screen_name": null,
-                "user": {
-                    "id": 759251,
-                    "id_str": "759251",
-                    "name": "CNN",
-                    "screen_name": "CNN",
-                    "location": "",
-                    "description": "It\u2019s our job to #GoThere & tell the most difficult stories. For breaking news, follow @CNNBRK and download our app https://t.co/ceNBoNi8y6",
-                    "url": "https://t.co/imGp4Ieixi",
-                    "entities": {
-                        "url": {
-                            "urls": [
-                                {
-                                    "url": "https://t.co/imGp4Ieixi",
-                                    "expanded_url": "http://www.cnn.com",
-                                    "display_url": "cnn.com",
-                                    "indices": [
-                                        0,
-                                        23
-                                    ]
-                                }
-                            ]
-                        },
-                        "description": {
-                            "urls": [
-                                {
-                                    "url": "https://t.co/ceNBoNi8y6",
-                                    "expanded_url": "http://cnn.com/apps",
-                                    "display_url": "cnn.com/apps",
-                                    "indices": [
-                                        115,
-                                        138
-                                    ]
-                                }
-                            ]
-                        }
-                    },
-                    "protected": false,
-                    "followers_count": 61427328,
-                    "friends_count": 1093,
-                    "listed_count": 158690,
-                    "created_at": "Fri Feb 09 00:35:02 +0000 2007",
-                    "favourites_count": 1377,
-                    "utc_offset": null,
-                    "time_zone": null,
-                    "geo_enabled": true,
-                    "verified": false,
-                    "statuses_count": 409399,
-                    "lang": null,
-                    "contributors_enabled": false,
-                    "is_translator": false,
-                    "is_translation_enabled": true,
-                    "profile_background_color": "323232",
-                    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
-                    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
-                    "profile_background_tile": false,
-                    "profile_image_url": "http://pbs.twimg.com/profile_images/1278259160644227073/MfCyF7CG_normal.jpg",
-                    "profile_image_url_https": "https://pbs.twimg.com/profile_images/1278259160644227073/MfCyF7CG_normal.jpg",
-                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/759251/1681840338",
-                    "profile_link_color": "004287",
-                    "profile_sidebar_border_color": "000000",
-                    "profile_sidebar_fill_color": "EEEEEE",
-                    "profile_text_color": "000000",
-                    "profile_use_background_image": false,
-                    "has_extended_profile": false,
-                    "default_profile": false,
-                    "default_profile_image": false,
-                    "following": false,
-                    "follow_request_sent": false,
-                    "notifications": false,
-                    "translator_type": "regular",
-                    "withheld_in_countries": []
-                },
-                "geo": null,
-                "coordinates": null,
-                "place": null,
-                "contributors": null,
-                "is_quote_status": false,
-                "retweet_count": 192,
-                "favorite_count": 108,
-                "favorited": false,
-                "retweeted": false,
-                "possibly_sensitive": false,
-                "lang": "en"
-            },
-            "is_quote_status": false,
-            "retweet_count": 192,
-            "favorite_count": 0,
-            "favorited": false,
-            "retweeted": false,
-            "possibly_sensitive": false,
-            "lang": "en"
-        }
-    ]
+            "description": {
+              "urls": [
+                {
+                  "url": "https://t.co/ceNBoNi8y6",
+                  "expanded_url": "http://cnn.com/apps",
+                  "display_url": "cnn.com/apps",
+                  "indices": [115, 138]
+                }
+              ]
+            }
+          },
+          "protected": false,
+          "followers_count": 61427328,
+          "friends_count": 1093,
+          "listed_count": 158690,
+          "created_at": "Fri Feb 09 00:35:02 +0000 2007",
+          "favourites_count": 1377,
+          "utc_offset": null,
+          "time_zone": null,
+          "geo_enabled": true,
+          "verified": false,
+          "statuses_count": 409399,
+          "lang": null,
+          "contributors_enabled": false,
+          "is_translator": false,
+          "is_translation_enabled": true,
+          "profile_background_color": "323232",
+          "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+          "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+          "profile_background_tile": false,
+          "profile_image_url": "http://pbs.twimg.com/profile_images/1278259160644227073/MfCyF7CG_normal.jpg",
+          "profile_image_url_https": "https://pbs.twimg.com/profile_images/1278259160644227073/MfCyF7CG_normal.jpg",
+          "profile_banner_url": "https://pbs.twimg.com/profile_banners/759251/1681840338",
+          "profile_link_color": "004287",
+          "profile_sidebar_border_color": "000000",
+          "profile_sidebar_fill_color": "EEEEEE",
+          "profile_text_color": "000000",
+          "profile_use_background_image": false,
+          "has_extended_profile": false,
+          "default_profile": false,
+          "default_profile_image": false,
+          "following": false,
+          "follow_request_sent": false,
+          "notifications": false,
+          "translator_type": "regular",
+          "withheld_in_countries": []
+        },
+        "geo": null,
+        "coordinates": null,
+        "place": null,
+        "contributors": null,
+        "is_quote_status": false,
+        "retweet_count": 192,
+        "favorite_count": 108,
+        "favorited": false,
+        "retweeted": false,
+        "possibly_sensitive": false,
+        "lang": "en"
+      },
+      "is_quote_status": false,
+      "retweet_count": 192,
+      "favorite_count": 0,
+      "favorited": false,
+      "retweeted": false,
+      "possibly_sensitive": false,
+      "lang": "en"
+    }
+  ]
 }

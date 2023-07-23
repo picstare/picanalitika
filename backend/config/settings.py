@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-i#s64+av(940yx%y$5d+h951&2zz3+6$7bya1$s25c^pe2#qa)"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = 'false'
+DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 
@@ -125,3 +125,10 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://picanalitika.tech',
+    'http://picanalitika.tech',
+    'https://localhost',
+    'http://localhost'
+]

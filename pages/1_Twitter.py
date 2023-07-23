@@ -14,7 +14,6 @@ from pyvis.network import Network as net
 import tweepy
 from streamlit_tags import st_tags
 from json import JSONEncoder
-import PIL
 import time
 import nltk
 import gensim
@@ -32,10 +31,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 import joblib
 from sklearn.metrics import accuracy_score
 import plotly.express as px
+from streamlit_extras.app_logo import add_logo
+import base64
+from PIL import Image
+
 
 nltk.download('vader_lexicon')
 
@@ -73,7 +75,7 @@ class DateTimeEncoder(JSONEncoder):
         if isinstance(o, datetime):
             return o.isoformat()
         return super().default(o)
-
+    
 
 
 ####################LOGOUT####################
@@ -161,9 +163,9 @@ with tab1:
                     col.write(f"Friend: {friend_count}")
                     col.write(f"Listed: {listed_count}")
 
-        ######################################CHART TIME SERIES#######################
+###################################### CHART TIME SERIES #######################
 
-        st.header("TIME SERIES ANALYSIS OF THE KEY PERSONs")
+        st.header("TIME SERIES ANALYSIS OF THE KEY PERSONS")
         
 
         files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith('.json')]
@@ -212,7 +214,7 @@ with tab1:
             df1_grouped = df1_filtered.groupby(['date', 'name']).size().reset_index(name='count')
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.lineplot(data=df1_grouped, x='date', y='count', hue='name', ax=ax)
-            ax.set_title(f"Tweets per Day for {', '.join(selected_names)}")
+            ax.set_title(f"Tweets per Day of {', '.join(selected_names)}")
             ax.set_xlabel("Date")
             ax.set_ylabel("Number of Tweets")
             st.pyplot(fig)
@@ -222,127 +224,889 @@ with tab1:
         st.markdown("---")
 
     #####################SNA########################
-        st.header("SOCIAL NETWORK ANALYSIS OF THE KEY PERSONS")
-        # folder_path = 'twittl/'
-        def get_followers_following_tweets(folder_path):
-            followers = {}
-            following = {}
-            tweet_data = []
+        import json
+        import os
+        import networkx as nx
+        from pyvis.network import Network
+        import streamlit as st
+        from datetime import datetime, timedelta
 
-            for file_name in os.listdir(folder_path):
-                if file_name.endswith('.json'):
-                    account = file_name.split('.')[0]
-                    with open(os.path.join(folder_path, file_name), 'r') as f:
-                        data = json.load(f)
-                        followers[account] = data['followers']
-                        following[account] = data['following']
-                        tweets = data['tweets']
-                        for tweet in tweets:
-                            tweet_info = {}
-                            tweet_info['id_str'] = tweet['id_str']
-                            tweet_info['created_at'] = tweet['created_at']
-                            tweet_info['full_text'] = tweet['full_text']
-                            tweet_info['user_mentions'] = tweet['entities']['user_mentions']
-                            tweet_info['retweeted_user'] = tweet['retweeted_status']['user']['screen_name'] if 'retweeted_status' in tweet else None
-                            tweet_info['in_reply_to_screen_name'] = tweet['in_reply_to_screen_name']
-                            tweet_info['tweet_url'] = f"https://twitter.com/{account}/status/{tweet['id_str']}"
-                            tweet_data.append(tweet_info)
 
-            return followers, following, tweet_data
+        st.header('TWITTER NETWORK ANALYSIS OF KEYPERSONS')
+        # Function to create social network analysis graph
+        @st.cache_data
+        def create_social_network_analysis(json_data):
+            # Create an undirected graph
+            graph = nx.Graph()
 
-        def build_social_network(followers, following):
-            G = nx.DiGraph()
+            # Add edges based on tweet relationships
+            for tweet in json_data["tweets"]:
+                tweet_user = tweet["user"]["screen_name"]
 
-            for account in followers.keys():
-                G.add_node(account, title=account, label=account)
+                if "quoted_status_user" in tweet:
+                    quoted_user = tweet["quoted_status_user"]["screen_name"]
+                    graph.add_edge(tweet_user, quoted_user, relationship="quoted")
 
-                for follower in followers[account]:
-                    G.add_edge(follower, account)
+                for mention in tweet["entities"]["user_mentions"]:
+                    mention_user = mention["screen_name"]
+                    graph.add_edge(tweet_user, mention_user, relationship="mention")
 
-                for followee in following[account]:
-                    G.add_edge(account, followee)
+                if "in_reply_to_screen_name" in tweet:
+                    reply_user = tweet["in_reply_to_screen_name"]
+                    if reply_user is not None:
+                        graph.add_edge(tweet_user, reply_user, relationship="reply")
 
-                # Add 'not_followed_back' nodes and edges
-                not_followed_back = set(followers[account]) - set(following[account])
-                for not_followed in not_followed_back:
-                    G.add_node(not_followed, title=not_followed, label=not_followed)
-                    G.add_edge(not_followed, account, relationship='not_followed_back')
+            # Add nodes for followers and following
+            for follower in json_data["followers"]:
+                graph.add_edge(follower, tweet_user, relationship="follower")
 
-                # Add 'not_following_back' nodes and edges
-                not_following_back = set(following[account]) - set(followers[account])
-                for not_following in not_following_back:
-                    G.add_node(not_following, title=not_following, label=not_following)
-                    G.add_edge(account, not_following, relationship='not_following_back')
+            for following in json_data["following"]:
+                graph.add_edge(tweet_user, following, relationship="following")
 
-            return G
-        
+            # Compute the layout using spring layout
+            layout = nx.spring_layout(graph)
 
-        def visualize_social_network(G, selected_accounts):
-            subgraph_nodes = set()
-            for account in selected_accounts:
-                subgraph_nodes |= set([account] + followers[account] + following[account])
-            subgraph = G.subgraph(subgraph_nodes)
+            # Set the layout as a node attribute
+            nx.set_node_attributes(graph, layout, name="pos")
 
-            nt = net(height='750px', width='100%', bgcolor='#fff', font_color='#3C486B', directed=True)
+            return graph
 
-            node_colors = {}
-            for account in selected_accounts:
-                node_colors[account] = '#2CD3E1'
-                for follower in followers[account]:
-                    node_colors[follower] = '#FF6969'
-                for followee in following[account]:
-                    node_colors[followee] = '#FFD3B0'
+        # Load JSON data from selected files
+        @st.cache_data
+        def load_json_files(json_files):
+            json_data_list = []
+            for json_file in json_files:
+                with open(json_file) as f:
+                    json_data = json.load(f)
+                    json_data_list.append(json_data)
+            return json_data_list
 
-                # Add node colors for 'not_following_back'
-                not_following_back = set(following[account]) - set(followers[account])
-                for not_following in not_following_back:
-                    node_colors[not_following] = '#F5AEC1'
+        # Get list of JSON files from the "twittl" folder
+        folder_path = "twittl"
+        json_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(".json")]
 
-                # Add node colors for 'not_followed_back'
-                not_followed_back = set(followers[account]) - set(following[account])
-                for not_followed in not_followed_back:
-                    node_colors[not_followed] = '#FFA500'
+        snakpcol1,snakpcol2,snakpcol3=st.columns([2,1,1])
+        # Select JSON files
+        with snakpcol1:
+            selected_files = st.multiselect(
+                "Select JSON files",
+                [os.path.basename(file).split(".")[0] for file in json_files],
+                default=[os.path.basename(json_files[0]).split(".")[0]],
+            )
 
-            for node in subgraph.nodes():
-                nt.add_node(node, title=node, label=node, color=node_colors.get(node, 'skyblue'))
+        # Select start and end date
+        with snakpcol2:
+            default_start_date = datetime.now().date() - timedelta(days=30)
+            start_date = st.date_input("Select start date", value=default_start_date)
+        with snakpcol3:
+            default_end_date = datetime.now().date()
+            end_date = st.date_input("Select end date", value=default_end_date)
 
-            for edge in subgraph.edges():
-                nt.add_edge(edge[0], edge[1])
+        # Filter JSON files based on selected dates
+        filtered_files = []
+        for file in selected_files:
+            file_name = f"{file}.json"  # Remove the additional "_data" part
+            file_path = os.path.join(folder_path, file_name)
+            with open(file_path) as f:
+                json_data = json.load(f)
+                created_at = json_data["tweets"][0]["created_at"]
+                created_date = datetime.strptime(created_at, "%a %b %d %H:%M:%S +0000 %Y").date()
+                if start_date <= created_date <= end_date:
+                    filtered_files.append(file_path)
 
-            nt.font_color = 'white'
-        
-            nt.save_graph('html_files/social_network.html')
+        # Load selected JSON files
+        json_data_list = load_json_files(filtered_files)
+
+        # Create social network analysis graphs
+        graphs = [create_social_network_analysis(json_data) for json_data in json_data_list]
+
+        # Define group values for each relationship
+        group_by_relationship = {
+            "follower": 1,
+            "following": 2,
+            "quoted": 3,
+            "mention": 4,
+            "reply": 5
+        }
+
+        # Define color values for each group
+        group_colors = {
+            1: "#ff0000",  # Red
+            2: "#00ff00",  # Green
+            3: "#0000ff",  # Blue
+            4: "#ffff00",  # Yellow
+            5: "#ff00ff"   # Magenta
+        }
+
+        html_path = "html_files/social_network.html"
+
+
+        def visualize_social_network(graphs):
+            # Visualize the graph using Pyvis
+            nt = Network(height="800px", width="100%", bgcolor="#fff", font_color="grey")
+            for i, graph in enumerate(graphs):
+                for edge in graph.edges(data=True):
+                    source, target, data = edge
+                    relationship = data.get('relationship', '')
+                    group = group_by_relationship.get(relationship, 0)
+                    nt.add_node(source, label=source, group=group)
+                    nt.add_node(target, label=target, group=group)
+                    nt.add_edge(source, target, label=relationship)
+
+            # Save the graph to an HTML file
+            nt.save_graph(html_path)
 
             # Display the network visualization in Streamlit
-            with open('html_files/social_network.html', 'r') as f:
+            with open(html_path, 'r') as file:
+                html_string = file.read()
+                st.components.v1.html(html_string, height=960, scrolling=True)
+
+############################################DEGREE CENTRALITY #########################################
+
+        def visualize_degree_centrality_network(graphs):
+            nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
+            degree_centrality_values = []
+
+            for graph in graphs:
+                # Calculate degree centrality
+                degree_centrality = nx.degree_centrality(graph)
+                degree_subgraph = graph.subgraph([node for node, centrality in degree_centrality.items() if centrality > 0])
+                degree_centrality_values.append(degree_centrality)
+
+                # Add nodes to the network with size based on degree centrality
+                for node in degree_subgraph.nodes:
+                    centrality = degree_centrality[node]
+                    node_size = centrality * 20  # Adjust the scaling factor as needed
+                    nt.add_node(node, label=node, size=node_size)
+
+                # Add edges to the network
+                for edge in degree_subgraph.edges:
+                    source = edge[0]
+                    target = edge[1]
+                    relationship = degree_subgraph.edges[edge]['relationship']
+                    nt.add_edge(source, target, label=relationship)
+
+            nt.save_graph('html_files/degree_centrality_network.html')
+
+            with open('html_files/degree_centrality_network.html', 'r') as f:
                 html_string = f.read()
                 st.components.v1.html(html_string, height=960, scrolling=True)
 
-        # Read the data
-        followers, following, tweet_data = get_followers_following_tweets(folder_path)
+            top_actors = []
+            centrality_scores = []
+            for degree_centrality in degree_centrality_values:
+                top_actors += [actor for actor in degree_centrality if actor in degree_subgraph.nodes]
+                centrality_scores += [degree_centrality[actor] for actor in top_actors if actor in degree_centrality]
 
-        # Build the social network
-        G = build_social_network(followers, following)
+            y_pos = list(range(len(top_actors)))
 
-        default_accounts = list(followers.keys())[:4]
+            # Set the font size
+            plt.rc('font', size=8)
 
-            # Ask the user which accounts to visualize using st.sidebar.multiselect
-        selected_accounts = st.multiselect('Select accounts to visualize', list(followers.keys()), default=default_accounts)
+            # Set the figure size
+            fig, ax = plt.subplots(figsize=(10, 6))  # Set the width to 10 inches and height to 6 inches
 
-        # Retrieve the account names instead of file names
-        account_names = [account.split('_')[0] for account in selected_accounts]
+            ax.barh(y_pos, centrality_scores)
+            ax.set_xlabel('Degree Centrality')
+            ax.set_ylabel('Top Actors')
+            ax.set_title('Top Main Actors')
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(top_actors[:len(y_pos)])  # Truncate the labels to match the length of y_pos
+            plt.tight_layout()
 
-        # Display the selected account names in the Streamlit header
-        st.header("Social Network Accounts' Followers and Friends: " + ', '.join(account_names))
-        # Visualize the selected accounts
-        visualize_social_network(G, selected_accounts)   
+            # Display the plot in Streamlit
+            st.pyplot(fig)
+
+################## BETWEENESS CENTRALITY ##########################
+
+    def visualize_betweenness_centrality_network(graphs):
+        nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
+        betweenness_centrality_values = []
+
+        for graph in graphs:
+            # Calculate betweenness centrality
+            betweenness_centrality = nx.betweenness_centrality(graph)
+            betweenness_subgraph = graph.subgraph([node for node, centrality in betweenness_centrality.items() if centrality > 0])
+            betweenness_centrality_values.append(betweenness_centrality)
+
+            # Add nodes to the network with size based on betweenness centrality
+            for node in betweenness_subgraph.nodes:
+                centrality = betweenness_centrality[node]
+                node_size = centrality * 20  # Adjust the scaling factor as needed
+                nt.add_node(node, label=node, size=node_size)
+
+            # Add edges to the network
+            for edge in betweenness_subgraph.edges:
+                source = edge[0]
+                target = edge[1]
+                relationship = betweenness_subgraph.edges[edge]['relationship']
+                nt.add_edge(source, target, label=relationship)
+
+        nt.save_graph('html_files/betweenness_centrality_network.html')
+
+        with open('html_files/betweenness_centrality_network.html', 'r') as f:
+            html_string = f.read()
+            st.components.v1.html(html_string, height=960, scrolling=True)
+
+        top_actors = []
+        centrality_scores = []
+        for betweenness_centrality in betweenness_centrality_values:
+            top_actors += [actor for actor in betweenness_centrality if actor in betweenness_subgraph.nodes]
+            centrality_scores += [betweenness_centrality[actor] for actor in top_actors if actor in betweenness_centrality]
+
+        y_pos = list(range(len(top_actors)))
+
+        fig, ax = plt.subplots()
+        ax.barh(y_pos, centrality_scores)
+        ax.set_xlabel('Betweenness Centrality')
+        ax.set_ylabel('Actors')
+        ax.set_title('Top Actors based on Betweenness Centrality')
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(top_actors[:len(y_pos)])  # Truncate the labels to match the length of y_pos
+        plt.tight_layout()
+
+        # Display the plot in Streamlit
+        st.pyplot(fig)
+
+
+
+############################### CLOSENESS CENTRALITY ################################
+
+    # Function to visualize the closeness centrality network using Pyvis
+  
+    def visualize_closeness_centrality_network(graphs):
+        nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
+        sorted_centralities = []
+
+        for graph in graphs:
+            closeness_centrality = nx.closeness_centrality(graph)
+            sorted_centrality = sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)
+            sorted_centralities.append(sorted_centrality)
+
+            # Add nodes to the network with size based on closeness centrality
+            for node, centrality in sorted_centrality:
+                node_size = centrality * 20  # Adjust the scaling factor as needed
+                nt.add_node(node, label=node, size=node_size)
+
+            # Add edges to the network
+            for edge in graph.edges:
+                source = edge[0]
+                target = edge[1]
+                relationship = graph.edges[edge]['relationship']
+                nt.add_edge(source, target, label=relationship)
+
+        nt.save_graph('html_files/closeness_centrality_network.html')
+        with open('html_files/closeness_centrality_network.html', 'r') as f:
+            html_string = f.read()
+            st.components.v1.html(html_string, height=960, scrolling=True)
+
+        top_actors = []
+        centrality_scores = []
+        for sorted_centrality in sorted_centralities:
+            top_actors += [node for node, _ in sorted_centrality[:5]]
+            centrality_scores += [centrality for _, centrality in sorted_centrality[:5]]
+
+        plt.figure(figsize=(10, 6))
+        plt.barh(top_actors, centrality_scores)
+        plt.xlabel('Closeness Centrality')
+        plt.ylabel('Actors')
+        plt.title('Top Actors Based on Closeness Centrality')
+        plt.tight_layout()
+
+        # Display the chart in Streamlit
+        st.pyplot(plt)
+
+
+##############################################################
+    colvics1, colvics2, colvics3, colvics4 = st.tabs(['Social Network','Main Actors', 'Bridging Actors', 'Supporting Actors'])
+
+    with colvics1:
+        
+        visualize_social_network(graphs)
+
+    with colvics2:
+        # Call the visualize_degree_centrality_network function
+        visualize_degree_centrality_network(graphs)
+
+    with colvics3:
+
+        visualize_betweenness_centrality_network(graphs)
+    with colvics4:
+
+        visualize_closeness_centrality_network(graphs)
+
+
+
+#########################################################################
+    import json
+    import os
+    import gensim
+    import nltk
+    import pyLDAvis
+    import streamlit as st
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from nltk.tokenize import word_tokenize
+    from wordcloud import WordCloud
+    import matplotlib.pyplot as plt
+    from streamlit import components
+    import string
+    import re
+
+    # Function to preprocess the text data
+    def preprocess_text_data(user_data):
+        preprocessed_text_data = []
+        stop_words = set(stopwords.words('indonesian'))
+        stop_words.update(["and", "of", "the"])  # Add "and" and "of" to the set of stopwords
+        lemmatizer = WordNetLemmatizer()
+
+        for tweet in user_data['tweets']:
+            text = tweet['full_text']
+            # Convert text to lowercase
+            text = text.lower()
+
+            # Remove URLs
+            text = re.sub(r'http\S+', '', text)
+
+            # Remove double quotes
+            text = text.replace('"', '')
+
+            # Tokenize the text
+            tokens = word_tokenize(text)
+
+            # Remove stopwords, punctuation, and perform lemmatization
+            processed_tokens = [
+                lemmatizer.lemmatize(token)
+                for token in tokens
+                if token not in stop_words and token not in string.punctuation
+            ]
+
+            # Append the processed tokens to the preprocessed text data
+            preprocessed_text_data.append(processed_tokens)
+
+        return preprocessed_text_data
+
+
+        # Function to perform topic modeling
+    def perform_topic_modeling(text_data):
+        # Create a dictionary from the text data
+        dictionary = gensim.corpora.Dictionary(text_data)
+
+        # Create a corpus (Bag of Words representation)
+        corpus = [dictionary.doc2bow(text) for text in text_data]
+
+        # Perform topic modeling using LDA
+        lda_model = gensim.models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=10)
+
+        # Return the LDA model, corpus, and dictionary
+        return lda_model, corpus, dictionary
+
+
+
+    # Function to create a word cloud with keywords from the LDA model
+    def create_word_cloud_from_lda(lda_model):
+        topics = lda_model.show_topics(num_topics=10, num_words=10, formatted=False)
+        keywords = [word for topic in topics for word, _ in topic[1]]
+        wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(keywords))
+
+        # Get the colormap
+        colormap = 'viridis'
+
+        # Set the colormap for the word cloud
+        wordcloud.colormap = colormap
+
+        # Display the word cloud
+        plt.figure(figsize=(10, 5))
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis('off')
+        plt.title('Keywords Word Cloud')
+        st.pyplot(plt)
+        plt.close()
+
+
+    # Streamlit app
+    st.title("Topic Modeling of Key Persons")
+
+    # Folder path containing the JSON files
+    folder_path = "twittl"
+
+    # Check if the folder exists
+    if not os.path.exists(folder_path):
+        st.error("Folder 'twittl' does not exist.")
+    else:
+        # Get the list of JSON files in the folder
+        file_list = [file_name for file_name in os.listdir(folder_path) if file_name.endswith('.json')]
+
+        # Extract file names without the extension and "_data" suffix
+        file_names_without_data = [file_name.replace('_data.json', '') for file_name in file_list]
+
+        # Select a file
+        selected_file = st.selectbox("Select an account", file_names_without_data)
+
+        # Append '_data.json' to the selected file to get the actual file name
+        selected_file_with_data = selected_file + '_data.json'
+
+        # Load and preprocess the text data from the selected file
+        file_path = os.path.join(folder_path, selected_file_with_data)
+        with open(file_path, 'r') as f:
+            user_data = json.load(f)
+
+        text_data = preprocess_text_data(user_data)
+
+        # Perform topic modeling on the preprocessed text data
+        lda_model, corpus, dictionary = perform_topic_modeling(text_data)
+
+        # Generate the pyLDAvis visualization
+        lda_display = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary=lda_model.id2word, sort_topics=False)
+
+        # Save the pyLDAvis visualization as an HTML file
+        html_string = pyLDAvis.prepared_data_to_html(lda_display)
+
+        # Display the HTML in Streamlit
+        st.components.v1.html(html_string, height=800, scrolling=False) 
+
+        # Create the word cloud with keywords from the LDA model
+        create_word_cloud_from_lda(lda_model)  # Use the correct function name 
+
+        # # Create a word cloud
+        # topics = lda_model.show_topics(num_topics=10, num_words=10, formatted=False)
+        # keywords = [word for topic in topics for word, _ in topic[1]]
+        # wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(keywords))
+
+
+
+######################## SENTIMENT ANALYSIS   ############################
+
+    from nltk.sentiment import SentimentIntensityAnalyzer
+    import numpy as np
+    from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+    from datetime import datetime
+    import json
+    import os
+    from nltk.corpus import stopwords
+    from nltk.tokenize import word_tokenize
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import streamlit as st
+
+    @st.cache_data
+    def load_and_preprocess_data(user_data, start_date, end_date):
+        preprocessed_text_data = []
+        stop_words = set(stopwords.words('indonesian'))
+        stemmer = StemmerFactory().create_stemmer()
+
+        for tweet in user_data['tweets']:
+            created_at = tweet['created_at']
+            created_at_date = datetime.strptime(created_at, '%a %b %d %H:%M:%S %z %Y').replace(tzinfo=None)
+
+            if start_date <= created_at_date <= end_date:
+                text = tweet['full_text']
+                text = text.lower()
+                tokens = word_tokenize(text)
+                processed_tokens = [stemmer.stem(token) for token in tokens if token not in stop_words]
+                preprocessed_text_data.append(processed_tokens)
+
+        return preprocessed_text_data
+
+ 
+    def perform_sentiment_analysis(text_data):
+        sia = SentimentIntensityAnalyzer()
+        sentiment_scores = []
+
+        for text in text_data:
+            sentiment_score = sia.polarity_scores(' '.join(text))
+            sentiment_scores.append(sentiment_score)
+
+        df_sentiment = pd.DataFrame(sentiment_scores)
+        return df_sentiment
+
+
+    st.title("Sentiment Analysis")
+    folder_path = "twittl"
+    account_list = [file_name.split("_data.json")[0] for file_name in os.listdir(folder_path) if file_name.endswith('_data.json')]
+    selected_accounts = st.multiselect("Select Accounts", account_list, default=account_list[:4], key="accsentf")
+    start_date = st.date_input("Start Date")
+    end_date = st.date_input("End Date")
+
+    if len(selected_accounts) == 0:
+        st.warning("No accounts selected. Please choose at least one account.")
+    elif not start_date or not end_date:
+        st.warning("Please select a start date and end date.")
+    else:
+        start_date = datetime.combine(start_date, datetime.min.time())
+        end_date = datetime.combine(end_date, datetime.max.time())
+        num_columns = len(selected_accounts)
+        columns = st.columns(num_columns)
+
+        for i, account in enumerate(selected_accounts):
+            file_name = f"{account}_data.json"
+            file_path = os.path.join(folder_path, file_name)
+            file_data = None
+
+            with open(file_path, 'r') as f:
+                file_data = json.load(f)
+
+            text_data = load_and_preprocess_data(file_data, start_date, end_date)
+
+            if len(text_data) == 0:
+                st.warning(f"There were no posts from {account} on {start_date} to {end_date}, so sentiment analysis cannot be performed.")
+                continue
+
+            df_sentiment = perform_sentiment_analysis(text_data)
+            sentiment_distribution = df_sentiment.mean().drop("compound")
+
+            with columns[i]:
+                fig, ax = plt.subplots(figsize=(6, 3))
+                ax.pie(sentiment_distribution.values, labels=sentiment_distribution.index, autopct='%1.1f%%', startangle=90)
+                ax.axis('equal')
+                ax.set_title(f"Sentiment Distribution: {account}")
+
+                st.pyplot(fig)
+                with st.expander(""):
+                    st.dataframe(df_sentiment)
+
+
+
+ ############################SENTIMENT ANALYSIS PER USER FOR ACCOUNT #############################
+    from nltk.sentiment import SentimentIntensityAnalyzer
+    import numpy as np
+    from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+    from datetime import datetime
+    import json
+    import os
+    from nltk.corpus import stopwords
+    from nltk.tokenize import word_tokenize
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import streamlit as st
+
+
+    @st.cache_data
+    def load_and_preprocess_data(file_path):
+        with open(file_path, 'r') as f:
+            user_data = json.load(f)
+
+        preprocessed_text_data = []
+        stop_words = set(stopwords.words('indonesian'))
+        stemmer = StemmerFactory().create_stemmer()
+
+        for tweet in user_data['tweets']:
+            text = tweet['full_text']
+            user = tweet['user']['name']  # Get the user name
+
+            text = text.lower()
+            tokens = word_tokenize(text)
+            processed_tokens = [stemmer.stem(token) for token in tokens if token not in stop_words]
+
+            preprocessed_text_data.append((processed_tokens, user))
+
+        return preprocessed_text_data
+
+    @st.cache_data
+    def perform_sentiment_analysis_per_user(text_data):
+        sia = SentimentIntensityAnalyzer()
+        user_sentiment_scores = {}
+
+        for text, user in text_data:
+            sentiment_score = sia.polarity_scores(' '.join(text))
+
+            if user not in user_sentiment_scores:
+                user_sentiment_scores[user] = {
+                    'positive': [],
+                    'negative': [],
+                    'neutral': [],
+                    'compound': []
+                }
+
+            user_sentiment_scores[user]['positive'].append(sentiment_score['pos'])
+            user_sentiment_scores[user]['negative'].append(sentiment_score['neg'])
+            user_sentiment_scores[user]['neutral'].append(sentiment_score['neu'])
+            user_sentiment_scores[user]['compound'].append(sentiment_score['compound'])
+
+        user_sentiment_scores_avg = {}
+        for user, scores in user_sentiment_scores.items():
+            user_sentiment_scores_avg[user] = {
+                'positive': np.mean(scores['positive']),
+                'negative': np.mean(scores['negative']),
+                'neutral': np.mean(scores['neutral']),
+                'compound': np.mean(scores['compound'])
+            }
+
+        df_sentiment_per_user = pd.DataFrame.from_dict(user_sentiment_scores_avg, orient='index')
+        return df_sentiment_per_user
+
+    st.title("Sentiment Analysis per user")
+
+    folder_path = "twittl"
+    account_list = [file_name.split("_data.json")[0] for file_name in os.listdir(folder_path) if file_name.endswith('_data.json')]
+    selected_accounts = st.multiselect("Select Accounts", account_list, default=account_list[:1], key="acsentselfil")
+    start_date = st.date_input("Start Date", key="sentu4(t")
+    end_date = st.date_input("End Date", key="3dinp)z")
+
+    if len(selected_accounts) == 0:
+        st.warning("No accounts selected. Please choose at least one account.")
+    elif not start_date or not end_date:
+        st.warning("Please select a start date and end date.")
+    else:
+        start_date = datetime.combine(start_date, datetime.min.time())
+        end_date = datetime.combine(end_date, datetime.max.time())
+        num_columns = len(selected_accounts)
+        columns = st.columns(num_columns)
+
+        for i, account in enumerate(selected_accounts):
+            file_name = f"{account}_data.json"
+            file_path = os.path.join(folder_path, file_name)
+
+            if not os.path.exists(file_path):
+                st.warning(f"No data available for {account}.")
+                continue
+
+            text_data = load_and_preprocess_data(file_path)
+
+            if len(text_data) == 0:
+                st.warning(f"There were no posts from {account} on {start_date} to {end_date}, so sentiment analysis cannot be performed.")
+                continue
+
+            df_sentiment_per_user = perform_sentiment_analysis_per_user(text_data)
+
+            st.subheader(f"Sentiment Analysis per User: {account}")
+
+            with st.expander(""):
+                st.dataframe(df_sentiment_per_user)
+
+            ax = df_sentiment_per_user.plot(kind='bar', rot=0, fontsize=5)
+            plt.xlabel('User', fontsize=7)
+            plt.ylabel('Sentiment Score', fontsize=7)
+            plt.title(f"Sentiment Analysis per User: {account}")
+            plt.xticks(rotation='vertical', fontsize=5)
+            plt.legend(fontsize=5)
+            plt.tight_layout()
+
+            for p in ax.patches:
+                ax.annotate(str(round(p.get_height(), 2)), (p.get_x() + p.get_width() / 2., p.get_height()),
+                            ha='center', va='center', xytext=(0, 5), textcoords='offset points', fontsize=5)
+
+            st.pyplot(plt)
+          
+
+############################LOCATION ACCOUNT ################################
+
+    import json
+    import os
+    import pandas as pd
+    from datetime import datetime
+    import folium
+    from streamlit_folium import folium_static, st_folium
+    from geopy.geocoders import Nominatim
+    from geopy.exc import GeocoderUnavailable
+    import streamlit as st
+
+    def load_tweet_data(file_path):
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+        return data['tweets']
+
+    def filter_tweets_by_date(tweets, start_date, end_date):
+        filtered_tweets = []
+        for tweet in tweets:
+            created_at = datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S %z %Y').replace(tzinfo=None)
+            if start_date <= created_at <= end_date:
+                filtered_tweets.append(tweet)
+        return filtered_tweets
+
+    def get_tweet_user_locations(tweets):
+        user_locations = {}
+        for tweet in tweets:
+            user = tweet['user']
+            user_name = user['screen_name']
+            location = user['location']
+            if location:
+                if user_name not in user_locations:
+                    user_locations[user_name] = {
+                        'location': location,
+                        'created_at': tweet['created_at']
+                    }
+        return user_locations
+
+    st.title("Tweet User Locations")
+
+    folder_path = "twittl"
+    account_list = [file_name.split("_data.json")[0] for file_name in os.listdir(folder_path) if file_name.endswith('_data.json')]
+    selected_accounts = st.multiselect("Select Accounts", account_list, default=account_list[:1], key="accselloc")
+    start_date = st.date_input("Start Date", key="acl0c)sd")
+    end_date = st.date_input("End Date", key='a(loc3d')
+
+    # Join the account names using "and" as the separator
+    formatted_accounts = " and ".join(selected_accounts)
+
     
-    st.markdown("---")
- ##############################################################################
- ############################################################################                   
-                    
+
+    if len(selected_accounts) == 0:
+        st.warning("No accounts selected. Please choose at least one account.")
+    elif not start_date or not end_date:
+        st.warning("Please select a start date and end date.")
+    else:
+        start_date = datetime.combine(start_date, datetime.min.time())
+        end_date = datetime.combine(end_date, datetime.max.time())
+        user_locations = {}
+
+        for account in selected_accounts:
+            file_name = f"{account}_data.json"
+            file_path = os.path.join(folder_path, file_name)
+
+            if not os.path.exists(file_path):
+                st.warning(f"No data available for {account}.")
+                continue
+
+            tweets = load_tweet_data(file_path)
+            filtered_tweets = filter_tweets_by_date(tweets, start_date, end_date)
+            account_user_locations = get_tweet_user_locations(filtered_tweets)
+            user_locations.update(account_user_locations)
+
+        if not user_locations:
+            st.warning(f"No tweets available for the selected accounts and date range.")
+        else:
+            df_user_locations = pd.DataFrame.from_dict(user_locations, orient='index')
+            df_user_locations['User'] = df_user_locations.index
+            df_user_locations = df_user_locations[['User', 'location', 'created_at']]
+
+            # Display the formatted result using st.subheader
+            st.subheader(f'Tweet User Locations of {formatted_accounts}')
+
+            with st.expander("User Location Data"):
+                st.dataframe(df_user_locations)
+
+            location_counts = df_user_locations['location'].value_counts()
+
+        
+            # Create a Folium map centered around the first user location
+            geolocator = Nominatim(user_agent="tweet_location_geocoder")
+            first_location = df_user_locations['location'].iloc[0]
+            location = geolocator.geocode(first_location)
+            if location:
+                lat, lon = location.latitude, location.longitude
+                tweet_map = folium.Map(location=[lat, lon], zoom_start=6)
+            else:
+                tweet_map = folium.Map(location=[0, 0], zoom_start=2)
+
+            # Add markers for each user location
+            for _, row in df_user_locations.iterrows():
+                location = row['location']
+                user = row['User']
+                tweet_time = row['created_at']
+                geocode_result = geolocator.geocode(location, timeout=10)
+                if geocode_result:
+                    lat, lon = geocode_result.latitude, geocode_result.longitude
+                    folium.Marker(
+                        location=[lat, lon],
+                        popup=f"User: {user}<br>Location: {location}<br>Time: {tweet_time}"
+                    ).add_to(tweet_map)
+
+            # Display the map
+            folium_static(tweet_map, width=1300, height=600)
+
+
+
+#######################HASHTAG ACCOUNT################################
+    import json
+    import glob
+    import pandas as pd
+    import streamlit as st
+    import plotly.express as px
+    import datetime as dt
+
+    # Function to extract hashtags from a tweet
+    def extract_hashtags(tweet):
+        if 'entities' in tweet and 'hashtags' in tweet['entities']:
+            return [tag['text'] for tag in tweet['entities']['hashtags']]
+        else:
+            return []
+
+    # Function to load tweets from files
+    def load_tweets(file_paths):
+        tweets = []
+        for file_path in file_paths:
+            with open(file_path, 'r') as file:
+                json_data = json.load(file)
+                tweets.extend(json_data['tweets'])
+        return tweets
+
+    
+
+    def perform_hashtag_analysis(file_paths, start_date, end_date):
+        # Load tweets from files
+        tweets = load_tweets(file_paths)
+
+        # Filter tweets based on date range
+        filtered_tweets = filter_tweets_by_date(tweets, start_date, end_date)
+
+        # Extract hashtags from tweets
+        hashtags = []
+        for tweet in filtered_tweets:
+            hashtags.extend(extract_hashtags(tweet))
+
+        # Create a DataFrame with hashtag counts
+        hashtag_counts = pd.Series(hashtags).value_counts().reset_index()
+        hashtag_counts.columns = ['Hashtag', 'Count']
+
+        return hashtag_counts
+
+    # Get file paths in the "twittl" folder
+    folder_path = 'twittl'
+    file_paths = glob.glob(f"{folder_path}/*.json")
+    file_names = [file_path.split('/')[-1] for file_path in file_paths]
+
+    st.title("Hashtag Analysis of Tweets")
+
+    # Get file paths in the "twittl" folder
+    folder_path = 'twittl'
+    file_paths = glob.glob(f"{folder_path}/*.json")
+    file_names = [os.path.splitext(os.path.basename(file_path))[0] for file_path in file_paths]
+
+    hashkpcol1, hashkpcol2, hashkpcol3 = st.columns([2, 1, 1])
+    with hashkpcol1:
+        selected_files = st.multiselect("Select account", file_names)
+    with hashkpcol2:
+        start_date = st.date_input("Start Date", key='hst5td')
+    with hashkpcol3:
+        end_date = st.date_input("End Date", key='hst3dt')
+
+    def filter_tweets_by_date(tweets, start_date, end_date):
+        filtered_tweets = []
+        for tweet in tweets:
+            created_at = dt.datetime.strptime(tweet['created_at'], '%a %b %d %H:%M:%S %z %Y').replace(tzinfo=None)
+            if start_date <= created_at <= end_date:
+                filtered_tweets.append(tweet)
+        return filtered_tweets
+    
+    # Perform hashtag analysis and display results
+    if st.button("Perform Analysis"):
+        if not selected_files:
+            st.warning("Please select at least one file.")
+        elif start_date > end_date:
+            st.warning("Start Date should be before End Date.")
+        else:
+            for file_name in selected_files:
+                file_path_selected = file_paths[file_names.index(file_name)]
+                start_date = pd.Timestamp(start_date)
+                end_date = pd.to_datetime(dt.datetime.today().date())
+                hashtag_counts = perform_hashtag_analysis([file_path_selected], start_date, end_date)
+                if len(hashtag_counts) > 0:
+                    fig = px.bar(hashtag_counts, x='Hashtag', y='Count', title=f'Hashtag Analysis - {file_name}')
+                    st.plotly_chart(fig)
+                else:
+                    st.info(f"No tweets found within the specified date range for {file_name}.")
+
+    
+
+
+##########################################################################
+
+
+
 with tab2:
-    st.header('Issue Analysis')
+    import matplotlib.dates as mdates
+    st.header('ISSUES ANALYSIS')
 
     folder_path = "twitkeys"
 
@@ -382,8 +1146,8 @@ with tab2:
     # Create widgets for selecting the keywords and time range
     selected_keywords = st.multiselect('Select keywords to compare', keywords, default=default_keywords, key='selissue')
     cols_ta, cols_tb = st.columns([1, 1])
-    start_date = pd.to_datetime(cols_ta.date_input('Start date', value=start_date, key='start_date')).date()
-    end_date = pd.to_datetime(cols_tb.date_input('End date', value=end_date, key='end_date')).date()
+    start_date = pd.to_datetime(cols_ta.date_input('Start date', value=start_date, key='start_date(XT')).date()
+    end_date = pd.to_datetime(cols_tb.date_input('End date', value=end_date, key='end_date^H')).date()
 
     # Filter the data based on the selected keywords and time range
     if df is not None:
@@ -394,8 +1158,16 @@ with tab2:
 
     if len(df_filtered) > 0:
         df_grouped = df_filtered.groupby(['date', 'keyword']).size().reset_index(name='count')
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(12, 4))
         sns.lineplot(data=df_grouped, x='date', y='count', hue='keyword', ax=ax)
+
+        # Set the date format for the x-axis labels to 'YYYY-MM-DD'
+        date_format = '%Y-%m-%d'
+        ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+
+        # Rotate the x-axis labels for better readability
+        plt.xticks(rotation=0)
+
         ax.set_title(f"Tweets per Day for {', '.join(selected_keywords)}")
         ax.set_xlabel("Date")
         ax.set_ylabel("Number of Tweets")
@@ -403,14 +1175,23 @@ with tab2:
     else:
         st.write("No data available for the selected time range and keywords.")
 
-    
-    ################ SNA ####################
+    ################ ISSUE SNA ####################
+
+    st.header('TWITTER NETWORK ANALYSIS OF ISSUES')
+
+
     import glob
+    from datetime import datetime, date, timezone, timedelta
 
-
-    def process_json_files(files):
+    def process_json_files(files, start_date=None, end_date=None):
         G = nx.DiGraph()
-    
+
+        if start_date:
+            start_date = datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc)
+
+        if end_date:
+            end_date = datetime.combine(end_date, datetime.max.time(), tzinfo=timezone.utc)
+
         for file in files:
             with open(file, 'r') as f:
                 file_data = json.load(f)
@@ -420,21 +1201,47 @@ with tab2:
                     retweeted_user = tweet_data['Retweeted Tweet']['User Screen Name'] if 'Retweeted Tweet' in tweet_data and tweet_data['Retweeted Tweet'] else None
                     hashtags = tweet_data['Hashtags']
                     
-                    G.add_node(user_screen_name)
-                    if retweeted_user:
+                    tweet_date = datetime.strptime(tweet_data['Created At'], '%Y-%m-%dT%H:%M:%S%z')
+
+                    if start_date and tweet_date < start_date:
+                        continue
+                    if end_date and tweet_date > end_date:
+                        continue
+
+                    # Add nodes to the graph
+                    if not G.has_node(user_screen_name):
+                        G.add_node(user_screen_name)
+                    if retweeted_user and not G.has_node(retweeted_user):
                         G.add_node(retweeted_user)
-                        G.add_edge(user_screen_name, retweeted_user, relationship='retweeted')
-                    for mentioned_user in mentioned_users:
-                        G.add_node(mentioned_user)
-                        G.add_edge(user_screen_name, mentioned_user, relationship='mentioned')
+
+                    # Group node for mention, reply, and retweeted users
+                    group_node = 'Group_' + user_screen_name
+                    if not G.has_node(group_node):
+                        G.add_node(group_node, relationship='group')  # Add the group node to the graph
+
+                    # Connect individual users to the group node
+                    if mentioned_users:
+                        G.add_edge(group_node, user_screen_name, relationship='mentioned_group')
+                    if 'Replies' in tweet_data and tweet_data['Replies']:
+                        for reply in tweet_data['Replies']:
+                            replies_user = reply.get('User Screen Name')
+                            if replies_user and not G.has_node(replies_user):
+                                G.add_node(replies_user)
+                            if replies_user:
+                                G.add_edge(group_node, replies_user, relationship='replies_group')
+                    if retweeted_user and not G.has_node(retweeted_user):
+                        G.add_node(retweeted_user)
+                        G.add_edge(group_node, retweeted_user, relationship='retweeted_group')
 
                     for hashtag in hashtags:
-                    # Connect users who have mentioned or used the same hashtag
+                        # Connect users who have mentioned or used the same hashtag
                         users_with_same_hashtag = [node for node in G.nodes if G.nodes[node].get('relationship') == 'mentioned' and hashtag in G.edges[user_screen_name, node]['relationship']]
                         for user in users_with_same_hashtag:
                             G.add_edge(user_screen_name, user, relationship=hashtag)
-        
+
         return G
+
+        
     
     # Folder path containing the JSON files
     folder_path = "twitkeys"
@@ -445,39 +1252,92 @@ with tab2:
     # Create the social network graph
     G = process_json_files(file_list)
 
-    # Read JSON files from the folder
-    # folder_path = "twitkeys"
-    # file_path = os.path.join("twitkeys", f"{keyword}.json")
-    
-    # Create the social network graph
-    # G = process_json_files(files)
 
-    # Function to visualize the social network using pyvis
     def visualize_social_network(G):
         nt = net(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
 
+        # Define a dictionary to map relationships to colors
+        relationship_colors = {
+            'group': '#FF6666',  # Red color for group nodes and edges
+            'mentioned_group': '#00FF00',  # Green color for mentioned users
+            'replies_group': '#45CFDD',  # Blue color for replied users
+            'retweeted_group': '#FF00FF',  # Purple color for retweeted users
+            'hashtag': '#FFFF00'  # Yellow color for hashtag-related nodes and edges
+        }
+
+        # Helper function to check if a node exists in the graph
+        def node_exists(node):
+            return node in nt.get_nodes()
+
+        # Calculate the frequency of each relationship in the graph
+        relationship_frequency = {}
+        for edge in G.edges:
+            relationship = G.edges[edge]['relationship']
+            relationship_frequency[relationship] = relationship_frequency.get(relationship, 0) + 1
+
+        # Find the maximum frequency among all relationships
+        max_frequency = max(relationship_frequency.values())
+
         for node in G.nodes:
-            nt.add_node(node, label=node)
+            relationship = G.nodes[node].get('relationship')
+            node_color = relationship_colors.get(relationship, '#9681EB')  # Default to black color for nodes without a defined relationship
+            if G.nodes[node].get('relationship') == 'group' and not node_exists(node):
+                nt.add_node(node, label=node, color=node_color)  # Set color for group nodes
+            else:
+                nt.add_node(node, label=node, color=node_color)
 
         for edge in G.edges:
             source = edge[0]
             target = edge[1]
             relationship = G.edges[edge]['relationship']
-            nt.add_edge(source, target, label=relationship)
+
+            if not node_exists(source):
+                nt.add_node(source, label=source)  # Add the source node if it doesn't exist
+
+            if not node_exists(target):
+                nt.add_node(target, label=target)  # Add the target node if it doesn't exist
+
+            edge_color = relationship_colors.get(relationship, '#000000')  # Default to black color for edges without a defined relationship
+            width = 1 + 4 * (relationship_frequency[relationship] / max_frequency)  # Adjust the scaling factor as needed
+
+            nt.add_edge(source, target, label=relationship, color=edge_color, width=width)
 
         nt.save_graph('html_files/issue_social_network.html')
+
 
     # Display the graph in Streamlit
         with open('html_files/issue_social_network.html', 'r') as f:
             html_string = f.read()
             st.components.v1.html(html_string, height=960, scrolling=True)
 
-    default_files = [os.path.splitext(os.path.basename(file))[0] for file in files[:4]] if len(files) >= 4 else [os.path.splitext(os.path.basename(file))[0] for file in files]
-    selected_files = st.multiselect('Select Issue/Topic', [os.path.splitext(os.path.basename(file))[0] for file in files], default=default_files, format_func=lambda x: f"{x}.json")
+    seldttwitissuecol0,seldttwitissuecol1,seldttwitissuecol2=st.columns([2,1,1])
+
+    with seldttwitissuecol0:
+        default_files = [os.path.splitext(os.path.basename(file))[0] for file in files[:4]] if len(files) >= 4 else [os.path.splitext(os.path.basename(file))[0] for file in files]
+        selected_files = st.multiselect('Select Issue/Topic', [os.path.splitext(os.path.basename(file))[0] for file in files], default=default_files, format_func=lambda x: f"{x}.json")
+
+    # Calculate default start date and end date
+    default_end_date = datetime.now()
+    default_start_date = default_end_date - timedelta(days=30)
+
+    # Set default time to midnight (00:00:00) for both start and end dates
+    default_start_date = default_start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    default_end_date = default_end_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Date input widgets with default values
+    with seldttwitissuecol1:
+        start_date = st.date_input("Start Date", value=default_start_date, key='sd5nissu3twit')
+    with seldttwitissuecol2:
+        end_date = st.date_input("End Date", value=default_end_date, key='endtwi55uesn')
+
 
     # Process the selected JSON files and build the social network graph
     selected_files_paths = [os.path.join(folder_path, f"{file}.json") for file in selected_files]
-    selected_G = process_json_files(selected_files_paths)
+    # Create the social network graph based on all JSON files in the folder
+    G = process_json_files(file_list)
+
+    # Process the selected JSON files and build the social network graph for selected files
+    selected_G = process_json_files(selected_files_paths, start_date, end_date)
 
     # Visualize the social network
     # visualize_social_network(selected_G)
@@ -531,6 +1391,7 @@ with tab2:
 
         # Display the plot in Streamlit
         st.pyplot(fig)
+        plt.close()
 
 
 ################## BETWEENESS CENTRALITY ##########################
@@ -583,6 +1444,8 @@ with tab2:
 
         # Display the plot in Streamlit
         st.pyplot(fig)
+        plt.close()
+
 ##################################################################
     def calculate_closeness_centrality(G):
         closeness_centrality = nx.closeness_centrality(G)
@@ -630,8 +1493,11 @@ with tab2:
 
         # Display the chart in Streamlit
         st.pyplot(plt)
+        plt.close()
 
-
+    print("selected G nodes", selected_G.nodes())
+    for node in selected_G.nodes():
+        print(node, selected_G.nodes[node])
 
 
 ############################VISUGRAPJH###########################
@@ -647,119 +1513,216 @@ with tab2:
     
     with colviz4:
         visualize_closeness_centrality_network(selected_G, closeness_centrality)
+
     
-#################################################################################
+
 ######################TOPIC MODELING#############################################
 
+    import json
+    import os
+    import gensim
+    import nltk
+    import pyLDAvis
+    import streamlit as st
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    from nltk.tokenize import word_tokenize
+    from wordcloud import WordCloud
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+    import string
+    import re
+   
+
+    # Function to preprocess the text data
+    def preprocess_text_data(data):
+        preprocessed_text_data = []
+        stop_words = set(stopwords.words('indonesian'))
+        stop_words.update(['rt', 'yg', 'sih', 'dan'])  # Add "rt" and "yg" to the stop words
+        lemmatizer = WordNetLemmatizer()
+
+        for tweet_data in data['data']:
+            text = tweet_data['Text']
+
+            # Convert text to lowercase
+            text = text.lower()
+
+            # Remove URLs
+            text = re.sub(r'http\S+', '', text)
+
+            # Use regular expression to remove unwanted characters
+            text = re.sub(r'[\"@():,.#?!_*]', '', text)
+
+            # Tokenize the text
+            tokens = word_tokenize(text)
+
+            # Remove stopwords and perform lemmatization, excluding "rt" and "yg"
+            processed_tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
+
+            # Append the processed tokens to the preprocessed text data
+            preprocessed_text_data.append(processed_tokens)
+
+        return preprocessed_text_data
+    
+   
+
+    class ComplexEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, complex):
+                return str(obj)  # Convert complex numbers to strings
+            return super().default(obj)
 
 
-    # Function to load and preprocess the text data
-    def load_and_preprocess_data(file_path):
-        with open(file_path, 'r') as f:
-            data = json.load(f)
-        
-        # Function to convert complex data types to JSON-serializable counterparts
-        def convert_to_serializable(data):
-            if isinstance(data, np.integer):
-                return int(data)
-            elif isinstance(data, np.floating):
-                return float(data)
-            elif isinstance(data, np.ndarray):
-                return data.tolist()
-            elif isinstance(data, (dt.datetime, dt.date)):
-                return data.isoformat()
-            else:
-                return data
+    # Function to perform topic modeling
+    def perform_topic_modeling(text_data):
+    # Create a dictionary from the text data
+        dictionary = gensim.corpora.Dictionary(text_data)
+
+        # Create a corpus (Bag of Words representation)
+        corpus = [dictionary.doc2bow(text) for text in text_data]
+
+        # Perform topic modeling using LDA
+        lda_model = gensim.models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=10)
+
+        # Return the LDA model, corpus, and dictionary
+        return lda_model, corpus, dictionary
 
 
-        # Function to preprocess the text data
-        def preprocess_text_data(data):
-            preprocessed_text_data = []
-            stop_words = set(stopwords.words('indonesian'))
-            lemmatizer = WordNetLemmatizer()
+    # Function to create a word cloud from keywords
+    def create_word_cloud(lda_model, dictionary):
+        topics = lda_model.show_topics(num_topics=10, num_words=10, formatted=False)
 
-            for tweet_data in data['data']:
-                text = tweet_data['Text']
+        # Extract keywords from topics
+        keywords = [word for topic in topics for word, _ in topic[1]]
 
-                # Convert text to lowercase
-                text = text.lower()
+        # Create a word cloud
+        wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(keywords))
 
-                # Tokenize the text
-                tokens = word_tokenize(text)
-
-                # Remove stopwords and perform lemmatization
-                processed_tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
-
-                # Append the processed tokens to the preprocessed text data
-                preprocessed_text_data.append(processed_tokens)
-
-            return preprocessed_text_data
+        # Display the word cloud
+        plt.figure(figsize=(10, 5))
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis('off')
+        plt.title('Keywords Word Cloud')
+        st.pyplot(plt)
+        plt.close()
 
 
-        # Function to perform topic modeling
-        def perform_topic_modeling(text_data):
-            # Create a dictionary from the text data
-            dictionary = gensim.corpora.Dictionary(text_data)
+    # Custom encoder to handle complex numbers
+    class CustomEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, complex):
+                return str(obj)  # Convert complex numbers to strings
+            return super().default(obj)
 
-            # Create a corpus (Bag of Words representation)
-            corpus = [dictionary.doc2bow(text) for text in text_data]
+    # Streamlit app
+    st.title("Topic Modeling of Issue")
 
-            # Perform topic modeling using LDA
-            lda_model = gensim.models.LdaModel(corpus=corpus, id2word=dictionary, num_topics=10, passes=10)
+    # Folder path containing the JSON files
+    folder_path = "twitkeys"
 
-            # Return the LDA model
-            return lda_model
-
-
-        # Main Streamlit app
-        st.title("Topic Modeling with pyLDAvis")
-
-        # Folder path containing the JSON files
-        folder_path = "twitkeys"
-
+    # Check if the folder exists
+    if not os.path.exists(folder_path):
+        st.error("Folder 'twitkeys' does not exist.")
+    else:
         # Get the list of JSON files in the folder
         file_list = [file_name for file_name in os.listdir(folder_path) if file_name.endswith('.json')]
 
-        # Select files
-        selected_files = st.multiselect("Select Files", file_list, default=file_list[:1])
+        # Select a file
+        selected_file = st.selectbox("Select a File", file_list)
 
-        # List to store preprocessed text data from selected files
-        preprocessed_text_data = []
+        # Load and preprocess the text data from the selected file
+        file_path = os.path.join(folder_path, selected_file)
+        with open(file_path, 'r') as f:
+            data = json.load(f)
 
-        # Iterate over the selected files
-        for file_name in selected_files:
-            file_path = os.path.join(folder_path, file_name)
-
-            # Load and preprocess the text data from the file
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-
-            text_data = preprocess_text_data(data)
-
-            # Append the preprocessed text data to the list
-            preprocessed_text_data.extend(text_data)
+        text_data = preprocess_text_data(data)
 
         # Perform topic modeling on the preprocessed text data
-        lda_model = perform_topic_modeling(preprocessed_text_data)
-
-        dictionary = gensim.corpora.Dictionary(preprocessed_text_data)
-        corpus = [dictionary.doc2bow(text) for text in preprocessed_text_data]
+        lda_model, corpus, dictionary = perform_topic_modeling(text_data)
 
         # Generate the pyLDAvis visualization
-        lda_display = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary, sort_topics=False)
+        # lda_display = pyLDAvis.gensim_models.prepare(lda_model, corpus, dictionary=lda_model.id2word, sort_topics=False)
 
-        # Convert complex data types to JSON-serializable counterparts
-        lda_display_data = {key: convert_to_serializable(value) for key, value in lda_display._data.items()}
+        lda_display = pyLDAvis.gensim.prepare(lda_model, corpus, dictionary=lda_model.id2word, sort_topics=False)
 
-        # Save the HTML file
-        pyLDAvis.save_html(lda_display_data, "lda.html")
+        # Save the pyLDAvis visualization as an HTML file
+        html_string = pyLDAvis.prepared_data_to_html(lda_display)
 
-        # Read the HTML file
-        with open("lda.html", "r") as f:
-            html_string = f.read()
+        # Display the HTML in Streamlit
+        st.components.v1.html(html_string, height=800, scrolling=False)
 
-        # Display the HTML file in Streamlit
-        st.components.v1.html(html_string, height=800, width=1500, scrolling=False)
+        # # Save the pyLDAvis visualization as an HTML file
+        # html_file = "lda_visualization.html"
+        # with open(html_file, 'w') as f:
+        #     f.write(pyLDAvis.prepared_data_to_html(lda_display))
+
+        # # Display the saved HTML file using Streamlit's components API
+        # st.components.v1.html(open(html_file, 'r').read())
+
+        # # Display the HTML in Streamlit
+        # st.components.v1.html(open(file_name, 'r').read(), height=800, scrolling=False)
+
+        # Create and display the word cloud
+        create_word_cloud(lda_model, dictionary=dictionary)
+
+
+
+
+
+#######################HASHTAG ACCOUNT################################
+    st.header('HASHTAGS ANALYSIS OF ISSUES')
+  
+
+    import streamlit as st
+    import pandas as pd
+    import os
+    import json
+    import plotly.express as px
+    from datetime import datetime, timedelta
+
+    # Function to load data from a JSON file and filter by date
+    def load_data(file_path, start_date, end_date):
+        with open(file_path, 'r') as json_file:
+            data = json.load(json_file)
+        df = pd.DataFrame(data['data'])
+        df['Created At'] = pd.to_datetime(df['Created At'])
+        mask = (df['Created At'] >= start_date) & (df['Created At'] <= end_date)
+        return df[mask]
+
+    # Function to generate the hashtag analysis chart
+    def generate_hashtag_chart(df):
+        hashtags = df['Hashtags'].apply(', '.join).str.split(', ', expand=True).stack()
+        hashtag_counts = hashtags.value_counts().reset_index()
+        hashtag_counts.columns = ['hashtag', 'count']
+
+        fig = px.bar(hashtag_counts, x='count', y='hashtag', orientation='h', title='Hashtag Analysis')
+        return fig
+
+    # Get the list of files in the "twikeys" folder
+    file_list = os.listdir('twitkeys')
+    selected_files = st.multiselect('Select files', [os.path.splitext(file)[0] for file in file_list])
+
+    # Allow the user to set start and end dates
+    start_date = st.date_input('Start Date', key='hst1ssust')
+    end_date = st.date_input('End Date', key='edhast7iss')
+
+    if selected_files and start_date and end_date:
+        # Convert the start_date and end_date to datetime with UTC timezone
+        start_date = pd.Timestamp(start_date).tz_localize('UTC')
+        end_date = pd.Timestamp(end_date).tz_localize('UTC') + timedelta(days=1) - timedelta(seconds=1)
+
+        # Create dynamic columns for each selected file
+        num_cols = len(selected_files)
+        columns = st.columns(num_cols)
+
+        for idx, file in enumerate(selected_files):
+            columns[idx].write(f"## Analysis for {file}")
+            file_path = os.path.join('twitkeys', f"{file}.json")
+            df = load_data(file_path, start_date, end_date)
+            columns[idx].plotly_chart(generate_hashtag_chart(df))
+    else:
+        st.warning("Please select at least one file and set start and end dates.")
+
 
 
 ################################ SENTIMENT ANALYSIS#################################
@@ -771,6 +1734,7 @@ with tab2:
 
 
     # Function to load and preprocess the text data
+    @st.cache_data
     def load_and_preprocess_data(file_path):
         with open(file_path, 'r') as f:
             data = json.load(f)
@@ -800,21 +1764,27 @@ with tab2:
 
 
     # Function to perform sentiment analysis using VADER
-    def perform_sentiment_analysis(text_data):
+    @st.cache_data
+    def perform_sentiment_analysis(text_data_list):
         # Initialize the VADER sentiment intensity analyzer
         sia = SentimentIntensityAnalyzer()
 
-        # Perform sentiment analysis on each text
-        sentiment_scores = []
-        for text in text_data:
-            sentiment_score = sia.polarity_scores(' '.join(text))
-            sentiment_scores.append(sentiment_score)
+        sentiment_scores_list = []
+        for text_data in text_data_list:
+            # Perform sentiment analysis on each text data
+            sentiment_scores = []
+            for text in text_data:
+                sentiment_score = sia.polarity_scores(' '.join(text))
+                sentiment_scores.append(sentiment_score)
 
-        # Convert the sentiment scores to a DataFrame
-        df_sentiment = pd.DataFrame(sentiment_scores)
+            # Append the sentiment scores of the current file to the list
+            sentiment_scores_list.append(sentiment_scores)
 
-        # Return the DataFrame with sentiment scores
-        return df_sentiment
+        # Convert the sentiment scores to a list of DataFrames
+        df_sentiment_list = [pd.DataFrame(scores) for scores in sentiment_scores_list]
+
+        # Return the list of DataFrames with sentiment scores
+        return df_sentiment_list
 
 
     # Main Streamlit app
@@ -823,15 +1793,17 @@ with tab2:
     # Folder path containing the JSON files
     folder_path = "twitkeys"
 
-    # Get the list of JSON files in the folder
-    file_list = [file_name for file_name in os.listdir(folder_path) if file_name.endswith('.json')]
+    # Get the list of files in the "twikeys" folder
+    file_list = os.listdir('twitkeys')
+    selected_files = st.multiselect('Select files', [os.path.splitext(file)[0] for file in file_list], key='sel5entissuetwit')
 
-    # Select files
-    selected_files = st.multiselect("Select Files", file_list, default=file_list[:4], key="file_selector")
+    # Date selection
+    start_date = st.date_input('Start Date', key='j4ncuk')
+    end_date = st.date_input('End Date', key='ban5at')
 
-    # Check if any files are selected
-    if len(selected_files) == 0:
-        st.warning("No files selected. Please choose at least one file.")
+    # Check if any files and dates are selected
+    if len(selected_files) == 0 or start_date is None or end_date is None:
+        st.warning("Please choose at least one file and select a date range.")
     else:
         # Define the number of columns based on the number of selected files
         num_columns = len(selected_files)
@@ -839,43 +1811,55 @@ with tab2:
         # Create a grid layout with the specified number of columns
         columns = st.columns(num_columns)
 
-        # Iterate over the selected files and display sentiment analysis results and charts
-        for i, file_name in enumerate(selected_files):
-            # List to store preprocessed text data from the current file
-            preprocessed_text_data = []
-
+        # Load and preprocess the text data for each selected file
+        text_data_list = []
+        for file_name in selected_files:
             # File path of the current file
-            file_path = os.path.join(folder_path, file_name)
+            file_path = os.path.join('twitkeys', f"{file_name}.json")
+
+            if not os.path.isfile(file_path):
+                st.warning(f"File '{file_name}.json' not found.")
+                continue
 
             # Load and preprocess the text data from the file
             text_data = load_and_preprocess_data(file_path)
 
             # Append the preprocessed text data to the list
-            preprocessed_text_data.extend(text_data)
+            text_data_list.append(text_data)
 
-            # Perform sentiment analysis on the preprocessed text data
-            df_sentiment = perform_sentiment_analysis(preprocessed_text_data)
+        # Perform sentiment analysis on the preprocessed text data for each file
+        df_sentiment_list = perform_sentiment_analysis(text_data_list)
 
-            # Calculate the sentiment distribution for the current file
+        # Calculate the sentiment distribution for each file
+        sentiment_distributions = []
+        for df_sentiment in df_sentiment_list:
             sentiment_distribution = df_sentiment.mean().drop("compound")
+            sentiment_distributions.append(sentiment_distribution)
+
+        # Iterate over the selected files and display sentiment analysis results and charts
+        for i, file_name in enumerate(selected_files):
+            df_sentiment = df_sentiment_list[i]
+            sentiment_distribution = sentiment_distributions[i]
 
             # Display the sentiment analysis results in the current column
             with columns[i]:
-                st.subheader(f"Sentiment Analysis: {file_name}")
-                st.dataframe(df_sentiment)
-
                 # Plot the sentiment distribution as a pie chart
-                fig, ax = plt.subplots()
+                fig, ax = plt.subplots(figsize=(6, 3))
                 ax.pie(sentiment_distribution.values, labels=sentiment_distribution.index, autopct='%1.1f%%', startangle=90)
                 ax.axis('equal')
                 ax.set_title(f"Sentiment Distribution: {file_name}")
 
                 # Display the chart
                 st.pyplot(fig)
+                with st.expander(""):
+                    st.dataframe(df_sentiment)
+
+
 
 
 
 ################################# SENTIMENT ANALYSIS PER USER PER FILES  ##############################
+    @st.cache_data
     def load_and_preprocess_data(file_path):
         with open(file_path, 'r') as f:
             data = json.load(f)
@@ -905,6 +1889,7 @@ with tab2:
         return preprocessed_text_data
 
        # Perform sentiment analysis per user
+    @st.cache_data
     def perform_sentiment_analysis_per_user(text_data):
         # Initialize the VADER sentiment intensity analyzer
         sia = SentimentIntensityAnalyzer()
@@ -946,14 +1931,14 @@ with tab2:
         # Return the DataFrame with sentiment scores per user
         return df_sentiment_per_user
 
-    # Main Streamlit app
+   # Main Streamlit app
     st.title("Sentiment Analysis per user")
 
     # Folder path containing the JSON files
     folder_path = "twitkeys"
 
     # Get the list of JSON files in the folder
-    file_list = [file_name for file_name in os.listdir(folder_path) if file_name.endswith('.json')]
+    file_list = [os.path.splitext(file_name)[0] for file_name in os.listdir(folder_path) if file_name.endswith('.json')]
 
     # Select files
     selected_files = st.multiselect("Select Files", file_list, default=file_list[:1], key="file_selector_sent")
@@ -964,7 +1949,7 @@ with tab2:
         preprocessed_text_data = []
 
         # File path of the current file
-        file_path = os.path.join(folder_path, file_name)
+        file_path = os.path.join(folder_path, file_name + ".json")  # Add the '.json' extension back
 
         # Load and preprocess the text data from the file
         text_data = load_and_preprocess_data(file_path)
@@ -977,14 +1962,17 @@ with tab2:
 
         # Display the sentiment analysis results per user
         st.subheader(f"Sentiment Analysis per User: {file_name}")
-        st.dataframe(df_sentiment_per_user)
+
+        with st.expander (""):
+            st.dataframe(df_sentiment_per_user)
 
         # Plot the sentiment scores per user as a bar chart
-        ax = df_sentiment_per_user.plot(kind='bar', rot=0)
-        plt.xlabel('User')
-        plt.ylabel('Sentiment Score')
+        ax = df_sentiment_per_user.plot(kind='bar', rot=0, fontsize=5)
+        plt.xlabel('User', fontsize=7)
+        plt.ylabel('Sentiment Score', fontsize=7)
         plt.title(f"Sentiment Analysis per User: {file_name}")
-        plt.xticks(rotation='vertical')
+        plt.xticks(rotation='vertical', fontsize=5)
+        plt.legend(fontsize=5)
         plt.tight_layout()
 
         # Modify the text of user in the bar chart
@@ -998,218 +1986,223 @@ with tab2:
 ######################### LOCATION ##############################
 
    
-    # import folium
-    # from streamlit_folium import folium_static, st_folium
-    # from geopy.geocoders import Nominatim
-    # from geopy.exc import GeocoderUnavailable
-    # import os
+    import folium
+    from streamlit_folium import folium_static, st_folium
+    from geopy.geocoders import Nominatim
+    from geopy.exc import GeocoderUnavailable
+    import os
+    import time
+    
+    st.header('Location')
+    # Create a geolocator object
+    geolocator = Nominatim(user_agent='twitter_map_app')
+
+    # Define a function to perform geocoding with caching
+    @st.cache_data
+    def geocode_location(location):
+        try:
+            location_data = geolocator.geocode(location, timeout=5)  # Increase the timeout value as needed
+            if location_data:
+                return location_data.latitude, location_data.longitude
+        except GeocoderUnavailable:
+            st.warning(f"Geocoding service is unavailable for location: {location}")
+        return None, None
     
     
-    # # Create a geolocator object
-    # geolocator = Nominatim(user_agent='twitter_map_app')
 
-    # # Define a function to perform geocoding with caching
-    # @st.cache_data
-    # def geocode_location(location):
-    #     try:
-    #         location_data = geolocator.geocode(location, timeout=5)  # Increase the timeout value as needed
-    #         if location_data:
-    #             return location_data.latitude, location_data.longitude
-    #     except GeocoderUnavailable:
-    #         st.warning(f"Geocoding service is unavailable for location: {location}")
-    #     return None, None
-    
-    
+    # Get the file paths of all JSON files in the "twitkeys" folder
+    file_paths = glob.glob('twitkeys/*.json')
 
-    # # Get the file paths of all JSON files in the "twitkeys" folder
-    # file_paths = glob.glob('twitkeys/*.json')
+    # Sort the file paths by modification time (newest to oldest)
+    file_paths.sort(key=os.path.getmtime, reverse=True)
 
-    # # Sort the file paths by modification time (newest to oldest)
-    # file_paths.sort(key=os.path.getmtime, reverse=True)
+    # Select the four newest files
+    default_files = file_paths[:1]
 
-    # # Select the four newest files
-    # default_files = file_paths[:1]
+    # Allow users to select multiple files using a multiselect widget
+    selected_files = st.multiselect("Select keyword", file_paths, default=default_files)
 
-    # # Allow users to select multiple files using a multiselect widget
-    # selected_files = st.multiselect("Select JSON Files", file_paths, default=default_files)
+    for file_path in selected_files:
+        file_name = os.path.splitext(os.path.basename(file_path))[0]  # Extract the filename without extension
 
-    # for file_path in selected_files:
-    #     file_name = os.path.splitext(os.path.basename(file_path))[0]  # Extract the filename without extension
+    # Define variables to store the min/max latitude and longitude
+    min_latitude = float('inf')
+    max_latitude = float('-inf')
+    min_longitude = float('inf')
+    max_longitude = float('-inf')
 
-    # # Define variables to store the min/max latitude and longitude
-    # min_latitude = float('inf')
-    # max_latitude = float('-inf')
-    # min_longitude = float('inf')
-    # max_longitude = float('-inf')
+    # Iterate over the selected files
+    for file_path in selected_files:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
 
-    # # Iterate over the selected files
-    # for file_path in selected_files:
-    #     with open(file_path, 'r') as f:
-    #         data = json.load(f)
+        user_data = data['data']
 
-    #     user_data = data['data']
+        # Perform geocoding for each user location
+        for user in user_data:
+            location = user.get('User Location')
+            if location:
+                latitude, longitude = geocode_location(location)
+                user['Latitude'] = latitude
+                user['Longitude'] = longitude
+                time.sleep(1)  # Add a 1-second delay between requests
 
-    #     # Perform geocoding for each user location
-    #     for user in user_data:
-    #         location = user.get('User Location')
-    #         if location:
-    #             latitude, longitude = geocode_location(location)
-    #             user['Latitude'] = latitude
-    #             user['Longitude'] = longitude
-    #             time.sleep(1)  # Add a 1-second delay between requests
+                # Update the min/max latitude and longitude
+                if latitude is not None:
+                    min_latitude = min(min_latitude, latitude)
+                    max_latitude = max(max_latitude, latitude)
+                if longitude is not None:
+                    min_longitude = min(min_longitude, longitude)
+                    max_longitude = max(max_longitude, longitude)
 
-    #             # Update the min/max latitude and longitude
-    #             if latitude is not None:
-    #                 min_latitude = min(min_latitude, latitude)
-    #                 max_latitude = max(max_latitude, latitude)
-    #             if longitude is not None:
-    #                 min_longitude = min(min_longitude, longitude)
-    #                 max_longitude = max(max_longitude, longitude)
+    # Calculate the center latitude and longitude
+    center_latitude = (min_latitude + max_latitude) / 2
+    center_longitude = (min_longitude + max_longitude) / 2
 
-    # # Calculate the center latitude and longitude
-    # center_latitude = (min_latitude + max_latitude) / 2
-    # center_longitude = (min_longitude + max_longitude) / 2
+    # Create a Folium map object
+    m = folium.Map(location=[center_latitude, center_longitude], zoom_start=2)
 
-    # # Create a Folium map object
-    # m = folium.Map(location=[center_latitude, center_longitude], zoom_start=2)
+    # Add markers to the map
+    for user in user_data:
+        latitude = user.get('Latitude')
+        longitude = user.get('Longitude')
+        user_name = user.get('User Name')
 
-    # # Add markers to the map
-    # for user in user_data:
-    #     latitude = user.get('Latitude')
-    #     longitude = user.get('Longitude')
-    #     user_name = user.get('User Name')
+        if latitude is not None and longitude is not None:
+            popup = f"User: {user_name}\nLocation: {user['User Location']}"
+            folium.Marker([latitude, longitude], popup=popup, tooltip=user_name).add_to(m)
 
-    #     if latitude is not None and longitude is not None:
-    #         popup = f"User: {user_name}\nLocation: {user['User Location']}"
-    #         folium.Marker([latitude, longitude], popup=popup, tooltip=user_name).add_to(m)
-
-    # # Display the map for the current file
-    # st.header(f"User Map in The Conversation on {file_name}")
-    # st_folium(m, width=1500, height=600)
+    # Display the map for the current file
+    st.subheader(f"User Map in The Conversation on {file_name}")
+    st_folium(m, width=1500, height=600)
 
 #################################################################
     
 
-    # st.title("Gender Prediction from Twitter Data")
-    # st.header("Predicted Gender")
-    
-    # def preprocess_tweet(tweet, training_columns):
-    #     processed_tweet = {
-    #         'User Name': str(tweet[0]),
-    #         'User Description': str(tweet[1]).lower() if tweet[1] else '',
-    #         'Text': str(tweet[2]).lower(),
-    #     }
-
-    #     processed_tweet = {k: float(v) if isinstance(v, str) and v.isnumeric() else v for k, v in processed_tweet.items()}
-    #     processed_tweet = pd.DataFrame(processed_tweet, index=[0])
-
-    #     # Perform one-hot encoding on the categorical variables
-    #     processed_tweet_encoded = pd.get_dummies(processed_tweet)
-    #     processed_tweet_encoded = processed_tweet_encoded.reindex(columns=training_columns, fill_value=0)
-
-    #     return processed_tweet_encoded.values.flatten()
+    st.title("Gender Prediction from Twitter Data")
+    st.header("Predicted Gender")
 
     
-    # def predict_gender(model, features, training_columns):
-    #     processed_tweet = preprocess_tweet(features, training_columns)
-    #     prediction = model.predict([processed_tweet])
-    #     return prediction[0]
+    def preprocess_tweet(tweet, training_columns):
+        processed_tweet = {
+            'User Name': str(tweet[0]),
+            'User Description': str(tweet[1]).lower() if tweet[1] else '',
+            'Text': str(tweet[2]).lower(),
+        }
 
+        processed_tweet = {k: float(v) if isinstance(v, str) and v.isnumeric() else v for k, v in processed_tweet.items()}
+        processed_tweet = pd.DataFrame(processed_tweet, index=[0])
 
+        # Perform one-hot encoding on the categorical variables
+        processed_tweet_encoded = pd.get_dummies(processed_tweet)
+        processed_tweet_encoded = processed_tweet_encoded.reindex(columns=training_columns, fill_value=0)
 
-    # dfout = pd.read_json('output1.json')
+        return processed_tweet_encoded.values.flatten()
 
-    # # st.dataframe(dfout)
-    # # print ("DFOUT:",dfout)
-
-    # # Prepare the data
-    # if 'Gender' in dfout.columns:
-    #     X = dfout.drop('Gender', axis=1)
-    # else:
-    #     X = dfout.copy()
-
-    # if 'Gender' in dfout.columns:
-    #     y = dfout['Gender']
-    # else:
-    #     # Handle the case when 'Gender' column is missing
-    #     # For example, you can print an error message or take appropriate action
-    #     st.write('Gender not in df.columns')
-
-    # # Perform one-hot encoding on the categorical variables in X
-    # X_encoded = pd.get_dummies(X)
-
-    # # Get the training columns from the X_encoded DataFrame
-    # training_columns = X_encoded.columns
-
-    # # Split the data into training and testing sets
-    # X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
-
-    # # Create a Gradient Boosting Classifier model
-    # model = GradientBoostingClassifier()
-
-    # # Fit the model to the training data
-    # model.fit(X_train, y_train)
-
-    # # Predict the gender for the test data
-    # y_pred = model.predict(X_test)
-
-    # # Evaluate the model's performance
-    # accuracy = accuracy_score(y_test, y_pred)
-    # st.write('Accuracy:', accuracy)
-
-    # # Save the trained model to a file
-    # joblib.dump(model, 'modelgend.pkl')
-
-    # # Get the file paths of all JSON files in the "twitkeys" folder
-    # file_paths = glob.glob('twitkeys/*.json')
-
-    # # Sort the file paths by modification time (newest to oldest)
-    # file_paths.sort(key=os.path.getmtime, reverse=True)
-
-    # # Allow users to select multiple files using a multiselect widget
     
-    # selected_files = st.multiselect("Select JSON Files", file_paths, default=file_paths[:4], key='gensel')
+    def predict_gender(model, features, training_columns):
+        processed_tweet = preprocess_tweet(features, training_columns)
+        prediction = model.predict([processed_tweet])
+        return prediction[0]
 
-    # data_list = []
 
-    # # Define the number of columns based on the number of selected files
-    # num_columns = len(selected_files)
 
-    # # Create a grid layout with the specified number of columns
-    # columns = st.columns(num_columns)
+    dfout = pd.read_json('output1.json')
 
-    # for i, file_path in enumerate(selected_files):
-    #     with open(file_path, 'r') as file:
-    #         json_data = json.load(file)
-    #         data_list.extend(json_data["data"])
+    # st.dataframe(dfout)
+    # print ("DFOUT:",dfout)
 
-    #     dfgend = pd.DataFrame(data_list)
-    #     # Drop irrelevant columns
-    #     columns_to_drop = ["User Screen Name", "User Location", "Hashtags", "Source", "In Reply To", "Mentioned Users",
-    #                     "Tweet URL", "Created At", "User Location", "Retweet Count", "Reply Count", "Mention Count",
-    #                     "Longitude", "Latitude", "Replies", "Retweeted Tweet", "Tweet ID", "Profile Image URL"]
-    #     dfgend = dfgend.drop(columns_to_drop, axis=1)
-    #     dfgend['Gender'] = ''
+    # Prepare the data
+    if 'Gender' in dfout.columns:
+        X = dfout.drop('Gender', axis=1)
+    else:
+        X = dfout.copy()
 
-    #     dfgend = dfgend.drop_duplicates(subset='User Name')
+    if 'Gender' in dfout.columns:
+        y = dfout['Gender']
+    else:
+        # Handle the case when 'Gender' column is missing
+        # For example, you can print an error message or take appropriate action
+        st.write('Gender not in df.columns')
 
-    #     # Load the model from the output.json file
-    #     model = joblib.load('modelgend.pkl')
+    # Perform one-hot encoding on the categorical variables in X
+    X_encoded = pd.get_dummies(X)
 
-    #     # Predict gender for each tweet
-    #     for index, tweet in dfgend.iterrows():
-    #         features = [tweet['User Name'], tweet['User Description'], tweet['Text']]
-    #         processed_tweet = preprocess_tweet(features, training_columns)
-    #         prediction = predict_gender(model, processed_tweet, training_columns)
-    #         dfgend.at[index, 'Gender'] = prediction
+    # Get the training columns from the X_encoded DataFrame
+    training_columns = X_encoded.columns
 
-    #     # Group by gender to get gender distribution
-    #     gender_counts = dfgend.groupby('Gender').size().reset_index(name='Count')
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
 
-    #     # Create a pie chart for gender distribution in the corresponding column
-    #     with columns[i]:
-    #         fig = px.pie(gender_counts, values='Count', names='Gender', title='Gender Distribution - ' + file_path)
-    #         st.plotly_chart(fig)
+    # Create a Gradient Boosting Classifier model
+    model = GradientBoostingClassifier()
+
+    # Fit the model to the training data
+    model.fit(X_train, y_train)
+
+    # Predict the gender for the test data
+    y_pred = model.predict(X_test)
+
+    # Evaluate the model's performance
+    accuracy = accuracy_score(y_test, y_pred)
+    st.write('Accuracy:', accuracy)
+
+    # Save the trained model to a file
+    joblib.dump(model, 'modelgend.pkl')
+
+    # Get the file paths of all JSON files in the "twitkeys" folder
+    file_paths = glob.glob('twitkeys/*.json')
+
+    # Sort the file paths by modification time (newest to oldest)
+    file_paths.sort(key=os.path.getmtime, reverse=True)
+
+    file_list = [os.path.splitext(os.path.basename(file_path))[0] for file_path in file_paths]
+
+    # Select files
+    selected_files = st.multiselect("Select Files", file_list, default=file_list[:1], key="gensel")
+
+    data_list = []
+
+    # Define the number of columns based on the number of selected files
+    num_columns = len(selected_files)
+
+    # Create a grid layout with the specified number of columns
+    columns = st.columns(num_columns)
+
+    for i, file_name in enumerate(selected_files):
+        file_path = os.path.join('twitkeys', file_name + '.json')
+
+        with open(file_path, 'r') as file:
+            json_data = json.load(file)
+            data_list.extend(json_data["data"])
+
+        dfgend = pd.DataFrame(data_list)
+        # Drop irrelevant columns
+        columns_to_drop = ["User Screen Name", "User Location", "Hashtags", "Source", "In Reply To", "Mentioned Users",
+                        "Tweet URL", "Created At", "User Location", "Retweet Count", "Reply Count", "Mention Count",
+                        "Longitude", "Latitude", "Replies", "Retweeted Tweet", "Tweet ID", "Profile Image URL"]
+        dfgend = dfgend.drop(columns_to_drop, axis=1)
+        dfgend['Gender'] = ''
+
+        dfgend = dfgend.drop_duplicates(subset='User Name')
+
+        # Load the model from the output.json file
+        model = joblib.load('modelgend.pkl')
+
+        # Predict gender for each tweet
+        for index, tweet in dfgend.iterrows():
+            features = [tweet['User Name'], tweet['User Description'], tweet['Text']]
+            processed_tweet = preprocess_tweet(features, training_columns)
+            prediction = predict_gender(model, processed_tweet, training_columns)
+            dfgend.at[index, 'Gender'] = prediction
+
+        # Group by gender to get gender distribution
+        gender_counts = dfgend.groupby('Gender').size().reset_index(name='Count')
+
+        # Create a pie chart for gender distribution in the corresponding column
+        with columns[i]:
+            fig = px.pie(gender_counts, values='Count', names='Gender', title='Gender Distribution - ' + file_name)
+            st.plotly_chart(fig)
 
 
     
@@ -1223,94 +2216,103 @@ with tab3:
           
         colta, coltb = st.columns([2, 2])
         with colta:
+            import pytz
+            timezone = pytz.timezone('Asia/Jakarta')  # Replace 'YOUR_TIMEZONE' with your desired timezone
             
             with st.form(key="taccountform"):
-                accounts = st_tags(
-                label='# Enter Account:',
-                text='Press enter to add more',
-                value=[],
-                suggestions=[],
-                maxtags=4,
-                key='1')
+                accounts = st.text_input(
+                    label='# Enter Account:',
+                    value='',
+                    key='1'
+                )
+                account_list = accounts.split('\n')  # Split input into a list of accounts
+
+                start_date = st.date_input("Start Date")
+                end_date = st.date_input("End Date")
 
                 submit = st.form_submit_button(label="Submit")
                 if submit:
-                    for account in accounts:
-                        user = api.get_user(screen_name=account)
-                        name = user.name
-                        description = user.description
+                    for account in account_list:
+                        try:
+                            user = api.get_user(screen_name=account)
+                            name = user.name
+                            description = user.description
 
+                           # get the list of followers for the user
+                            followers = api.get_followers(screen_name=account)
+                            follower_list = [follower.screen_name for follower in followers]
 
-                        # get the list of followers for the user
-                        followers = api.get_followers(screen_name=account)
-                        follower_list = [follower.screen_name for follower in followers]
+                            # get the list of users that the user follows
+                            following = api.get_friends(screen_name=account)
+                            following_list = [friend.screen_name for friend in following]
 
-                        # get the list of users that the user follows
-                        following = api.get_friends(screen_name=account)
-                        following_list = [friend.screen_name for friend in following]
+                            # find friends that do not follow back
+                            not_followed_back = [friend for friend in following_list if friend not in follower_list]
 
-                        # find friends that do not follow back
-                        not_followed_back = [friend for friend in following_list if friend not in follower_list]
+                            # find followers that have not been followed back
+                            not_following_back = [follower for follower in follower_list if follower not in following_list]
 
-                        # find followers that have not been followed back
-                        not_following_back = [follower for follower in follower_list if follower not in following_list]
+                            # find friends that follow back
+                            followed_back = [friend for friend in following_list if friend in follower_list]
 
-                        # find friends that follow back
-                        followed_back = [friend for friend in following_list if friend in follower_list]
+                            # find followers that are also friends
+                            following_back = [follower for follower in follower_list if follower in following_list]
+                            # Calculate the start and end dates
+                            days_ago = 10  # Number of days ago from today
+                            start_date = datetime.now() - timedelta(days=days_ago)
+                            end_date = datetime.now()
 
-                        # find followers that are also friends
-                        following_back = [follower for follower in follower_list if follower in following_list]
+                            # Convert start_date and end_date to offset-aware datetimes
+                            start_date = timezone.localize(start_date)
+                            end_date = timezone.localize(end_date)
 
+                            # get the user's tweets within the specified date range
+                            tweets = api.user_timeline(screen_name=account, count=50, tweet_mode='extended')
+                            tweets_list = [tweet._json for tweet in tweets if tweet.created_at >= start_date and tweet.created_at <= end_date]
 
-                        # get the user's tweets
-                        tweets = api.user_timeline(screen_name=account, count=10, tweet_mode='extended')
-                        tweets_list = [tweet._json for tweet in tweets]
+                            # search for tweets mentioning the user within the specified date range
+                            mention_tweets = api.search_tweets(q=f"@{account}", count=10, tweet_mode='extended')
+                            mention_tweets_list = [tweet._json for tweet in mention_tweets if tweet.created_at >= start_date and tweet.created_at <= end_date]
 
-                        # create a dictionary to store the user's information, tweets, friends, and followers
-                        user_data = {
-                            'name': name,
-                            'description': description,
-                            'followers': follower_list,
-                            'following': following_list,
-                            'not_followed_back': not_followed_back,
-                            'not_following_back': not_following_back,
-                            'followed_back': followed_back,
-                            'following_back': following_back,
-                            'tweets': tweets_list
-                        }
-
-                       # Create a directory if it doesn't exist
-                        os.makedirs("twittl", exist_ok=True)
-
-                        file_path = f"twittl/{account}_data.json"
-                        if os.path.exists(file_path):
-                            # Load existing data from the file
-                            with open(file_path, 'r') as json_file:
-                                existing_data = json.load(json_file)
-
-                            # Update the existing data with new data
-                            existing_data['name'] = name
-                            existing_data['description'] = description
-                            existing_data['followers'] = follower_list
-                            existing_data['following'] = following_list
-                            # Update other fields as needed
-
-                            # Write the updated data back to the file
-                            with open(file_path, 'w') as json_file:
-                                json.dump(existing_data, json_file)
-                        else:
-                            # Create a new file and write the data to it
+                            # create a dictionary to store the user's information, tweets, friends, and followers
                             user_data = {
                                 'name': name,
                                 'description': description,
                                 'followers': follower_list,
                                 'following': following_list,
-                                'tweets': tweets_list
+                                'not_followed_back': not_followed_back,
+                                'not_following_back': not_following_back,
+                                'followed_back': followed_back,
+                                'following_back': following_back,
+                                'tweets': tweets_list,
+                                'mention_tweets': mention_tweets_list
                             }
-                            # Add other fields as needed
 
-                            with open(file_path, 'w') as json_file:
-                                json.dump(user_data, json_file)
+                            # Create a directory if it doesn't exist
+                            os.makedirs("twittl", exist_ok=True)
+
+                            file_path = f"twittl/{account}_data.json"
+                            if os.path.exists(file_path):
+                                # Load existing data from the file
+                                with open(file_path, 'r') as json_file:
+                                    existing_data = json.load(json_file)
+
+                                # Update the existing data with new data
+                                existing_data['name'] = name
+                                existing_data['description'] = description
+                                existing_data['followers'] = follower_list
+                                existing_data['following'] = following_list
+                                # Update other fields as needed
+
+                                # Write the updated data back to the file
+                                with open(file_path, 'w') as json_file:
+                                    json.dump(existing_data, json_file)
+                            else:
+                                # Create a new file and write the data to it
+                                with open(file_path, 'w') as json_file:
+                                    json.dump(user_data, json_file)
+                        except tweepy.TweepyException as e:
+                            st.error(f"Error occurred for account: {account}. Error message: {str(e)}")
 
          
         with coltb:
@@ -1322,6 +2324,10 @@ with tab3:
                 # Add tag input for keywords
                 keywords = st.text_input(label="Enter Keyword(s)", help="Enter one or more keywords separated by commas")
 
+                # Add tag input for start date and end date
+                start_date = st.date_input("Start Date")
+                end_date = st.date_input("End Date")
+
                 # Add search button within the form
                 search_button = st.form_submit_button(label="Search")
 
@@ -1330,9 +2336,10 @@ with tab3:
                     for keyword in keyword_list:
                         results = []
 
-                        # Retrieve recent tweets
-                        max_results = 10
-                        tweets = api.search_tweets(q=keyword, count=max_results, tweet_mode="extended")
+                        # Retrieve recent tweets within the specified date range
+                        max_results = 50
+                        query = f"{keyword} since:{start_date} until:{end_date}"
+                        tweets = api.search_tweets(q=query, count=max_results, tweet_mode="extended")
 
                         # Process each tweet
                         for tweet in tweets:

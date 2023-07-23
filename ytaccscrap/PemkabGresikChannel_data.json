@@ -1,0 +1,92 @@
+{
+  "channel_details": {
+    "kind": "youtube#channel",
+    "etag": "0eLK-yFRmPd4gECtdORx2llA77g",
+    "id": "UCb1C-wSCygELT8P294qocHw",
+    "snippet": {
+      "title": "Pemkab Gresik",
+      "description": "Channel Youtube Resmi Pemerintah Kabupaten Gresik",
+      "customUrl": "@pemkabgresikchannel",
+      "publishedAt": "2013-03-23T05:15:51Z",
+      "thumbnails": {
+        "default": {
+          "url": "https://yt3.ggpht.com/7ZswWlXt9o6qFswlQp7EKyrN76OnIYfbDHUI99ET7P_BQUzoj0q4XrDjt8MJeZKuGwsRt_USZvg=s88-c-k-c0x00ffffff-no-rj",
+          "width": 88,
+          "height": 88
+        },
+        "medium": {
+          "url": "https://yt3.ggpht.com/7ZswWlXt9o6qFswlQp7EKyrN76OnIYfbDHUI99ET7P_BQUzoj0q4XrDjt8MJeZKuGwsRt_USZvg=s240-c-k-c0x00ffffff-no-rj",
+          "width": 240,
+          "height": 240
+        },
+        "high": {
+          "url": "https://yt3.ggpht.com/7ZswWlXt9o6qFswlQp7EKyrN76OnIYfbDHUI99ET7P_BQUzoj0q4XrDjt8MJeZKuGwsRt_USZvg=s800-c-k-c0x00ffffff-no-rj",
+          "width": 800,
+          "height": 800
+        }
+      },
+      "localized": {
+        "title": "Pemkab Gresik",
+        "description": "Channel Youtube Resmi Pemerintah Kabupaten Gresik"
+      }
+    },
+    "statistics": {
+      "viewCount": "522324",
+      "subscriberCount": "6740",
+      "hiddenSubscriberCount": false,
+      "videoCount": "188"
+    }
+  },
+  "videos": [
+    {
+      "title": "LIVE : BAWEAN RINTISAN PULAU PENDIDIKAN",
+      "published_at": "2023-07-13T04:48:23Z",
+      "description": "MELALUI KEGIATAN \"ENGLISH CAMP\" \n\nDISIARKAN SECARA LANGSUNG \nDI ALUN-ALUN SANGKAPURA BAWEAN  GRESIK\nRABU, 12 JULI 2023\n\n\n\n\u266b\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u0b9c\u06e9\u06de\u06e9\u0b9c\u25ac\u25ac\u00ad\u00ad\u00ad\u25ac\u25ac\u25ac\u25ac\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u25ac\u266b \u00ad\n                       ORIGINAL LIVESTREAM \n       HANYA DI CHANNEL PEMKAB GRESIK!\n\u266b\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u0b9c\u06e9\u06de\u06e9\u0b9c\u25ac\u25ac\u25ac\u25ac\u25ac\u25ac\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u00ad\u25ac\u266b",
+      "view_count": "1865",
+      "like_count": "100",
+      "comment_count": "0",
+      "video_url": "https://www.youtube.com/watch?v=0Zz4RBB0OkM",
+      "comments": []
+    },
+    {
+      "title": "[ PEMBACAAN MAULID NABI ] HAUL AKBAR AL-QUTB AL-HABIB ABU BAKAR ASSEGAF GRESIK YG KE 68",
+      "published_at": "2023-07-06T13:31:21Z",
+      "description": "RANGKAIAN HAUL AL HABIB ABUBAKAR BIN MUHAMMAD ASSEGAF GRESIK YANG KE-68\nKamis, 17 Dzulhijjah 1444 H / 06 Mei 2023\nDi Kediaman Habib Syech bin Abubakar Assegaf\nJl. KH Zubair 93 - Gresik",
+      "view_count": "991",
+      "like_count": "27",
+      "comment_count": "0",
+      "video_url": "https://www.youtube.com/watch?v=K_zDqWy6Q0I",
+      "comments": []
+    },
+    {
+      "title": "[ PUNCAK PERINGATAN HAUL ] HAUL AKBAR AL-QUTB AL-HABIB ABU BAKAR ASSEGAF GRESIK YG KE 68",
+      "published_at": "2023-07-06T06:07:00Z",
+      "description": "",
+      "view_count": "775",
+      "like_count": "33",
+      "comment_count": "0",
+      "video_url": "https://www.youtube.com/watch?v=hFG4cZH6lqc",
+      "comments": []
+    },
+    {
+      "title": "[ HADRAH ] Haul Akbar Al-Imam Al-Qutb Al-Habib Abu Bakar Bin Muhammad Bin Umar Assegaf",
+      "published_at": "2023-07-06T04:25:20Z",
+      "description": "",
+      "view_count": "285",
+      "like_count": "18",
+      "comment_count": "0",
+      "video_url": "https://www.youtube.com/watch?v=cQxD7OJkLXQ",
+      "comments": []
+    },
+    {
+      "title": "\ud83d\udd34LIVE | RAUHAH & KHATAM KITAB IHYA' - RANGKAIAN HAUL AL HABIB ABU BAKAR BIN MUHAMMAD ASSEGAF, GRESIK",
+      "published_at": "2023-07-05T12:40:14Z",
+      "description": "",
+      "view_count": "499",
+      "like_count": "27",
+      "comment_count": "0",
+      "video_url": "https://www.youtube.com/watch?v=an78XI_YpWA",
+      "comments": []
+    }
+  ]
+}

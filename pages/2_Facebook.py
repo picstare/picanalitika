@@ -153,91 +153,7 @@ with tab1:
         else:
             st.info("No data available for the selected date range.")
 
-    # # Function to load posts data from a JSON file
-    # def load_posts_data(file_path):
-    #     with open(file_path, "r") as f:
-    #         data = json.load(f)
-    #     return data
-
-
-    # def filter_posts_by_date(posts_data, start_date, end_date):
-    #     filtered_data = []
-    #     for post in posts_data:
-    #         post_date = pd.to_datetime(post["date post"]).date()  # Convert to datetime.date
-    #         if start_date <= post_date and post_date <= end_date:  # Use separate comparison statements
-    #             filtered_data.append(post)
-    #     return filtered_data
-
-    # # Function to perform time series analysis
-    # def perform_time_series_analysis(posts_data):
-    #     df = pd.DataFrame(posts_data)
-        
-    #     if "date post" not in df.columns:
-    #         st.error("No posts found within the selected date range.")
-    #         return None
-        
-    #     df["date post"] = pd.to_datetime(df["date post"])  # Update column name here
-    #     df.set_index("date post", inplace=True)  # Update column name here
-    #     return df
-
-    # # Get list of JSON files in the "fbperson" folder
-    # folder_name = "fbperson"
-    # file_names = os.listdir(folder_name)
-    # file_paths = [os.path.join(folder_name, file_name) for file_name in file_names]
-
-    # # Multiselect form to choose files
-    # selected_files = st.multiselect("Select Files", file_names, default=file_names[:4])
-
-    # # Start and end date inputs
-    # start_date = st.date_input("Start Date")
-    # end_date = st.date_input("End Date", value=pd.to_datetime("today"))
-
-    # # Perform time series analysis for selected files
-    # dataframes = []
-    # for file_path in file_paths:
-    #     file_name = os.path.basename(file_path)
-    #     if file_name in selected_files:
-    #         # Load posts data from JSON file
-    #         posts_data = load_posts_data(file_path)
-
-    #         # Filter posts data based on start and end dates
-    #         filtered_data = filter_posts_by_date(posts_data, start_date, end_date)
-
-    #         # Perform time series analysis
-    #         df = perform_time_series_analysis(filtered_data)
-
-    #         # Check if DataFrame is not None
-    #         if df is not None:
-    #             # Append DataFrame to the list
-    #             account_name = os.path.splitext(file_name)[0]  # Extract account name from the file title
-    #             df["Account"] = account_name
-    #             dataframes.append(df)
-
-    # # Concatenate DataFrames from selected files
-    # if dataframes:
-    #     combined_df = pd.concat(dataframes)
-
-    #     if not combined_df.empty:  # Check if the DataFrame is not empty
-    #         # Group by date and account, and calculate the count of posts
-    #         grouped_df = combined_df.groupby(["date post", "Account"]).size().unstack(fill_value=0)
-
-    #         fig, ax = plt.subplots(figsize=(12, 6))  # Specify the figure size (width, height)
-
-    #         for column in grouped_df.columns:
-    #             ax.plot(grouped_df.index, grouped_df[column], label=column)
-
-    #         ax.set_xlabel("Date", fontsize=8)  # Set the font size for x-axis label
-    #         ax.set_ylabel("Post Count", fontsize=8)  # Set the font size for y-axis label
-    #         ax.set_title("Time Series Analysis - Post Count by Account", fontsize=14)  # Set the font size for the title
-    #         ax.legend()
-
-    #         plt.xticks(fontsize=7)  # Set the font size for x-axis tick labels
-    #         plt.yticks(fontsize=7)  # Set the font size for y-axis tick labels
-
-    #         st.pyplot(fig)
-    #     else:
-    #         st.info("No data available for the selected date range.")
-
+    
 ##########################SENTIMENT ANALYSIS #########################################
     
    # Load posts and comments data from JSON file
@@ -344,7 +260,11 @@ with tab1:
     st.pyplot(fig)
             
 
-##################################################
+########################SOCIAL NETWORK ANALYSIS ACCOUNT #########################
+
+
+
+
 
 
 
