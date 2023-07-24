@@ -408,6 +408,9 @@ with tab1:
                 # Apply lambda function only if 'tags' column exists
                 df['tags'] = df['tags'].apply(lambda x: x if isinstance(x, list) else [])
 
+            # Filter data within the specified date range
+            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+
             # Group the data based on time series interval, keyword, and calculate the counts
             grouped_df = df.groupby(['keyword', pd.Grouper(key='date', freq='D')]).size().reset_index(name='count')
 
@@ -430,7 +433,7 @@ with tab1:
             header_text = 'Time Series of News for Keywords: ' + ', '.join(keywords)
             st.subheader(header_text)
 
-            # Display the chart
+            # Display the chart using Streamlit's plotly_chart function
             st.plotly_chart(fig)
 
 
@@ -440,13 +443,18 @@ with tab1:
         # Sidebar filters
         st.header('Time Series Analysis')
 
-        keywords = st.text_input("Keywords (comma-separated)").split(',')
-     
-        start_date = st.date_input("Start Date", default_start_date)
-        end_date = st.date_input("End Date", default_end_date)
+        col1,col2,col3=st.columns([2,1,1])
 
+        with col1:
+            keywords = st.text_input("Keywords (comma-separated)").split(',')
+        with col2:
+            start_date = st.date_input("Start Date", default_start_date)
+        with col3:
+            end_date = st.date_input("End Date", default_end_date)
+        
         # Convert start_date and end_date to datetime objects with UTC timezone
         start_date = pd.to_datetime(start_date).tz_localize('UTC')
+    
         end_date = pd.to_datetime(end_date).tz_localize('UTC')
 
 
@@ -456,8 +464,6 @@ with tab1:
         # Convert the filtered data to DataFrame and apply fixes for Arrow compatibility
         # Convert the filtered data to DataFrame and apply fixes for Arrow compatibility
         df = pd.DataFrame(filtered_data)
-        st.dataframe(df.columns)
-        print(df.columns)  # Print the columns of the DataFrame
         df['tags'] = df['tags'].apply(lambda x: x if isinstance(x, list) else [])
 
         # Plot the time series chart
@@ -466,8 +472,10 @@ with tab1:
 
         # Display the DataFrame
         df = pd.DataFrame(filtered_data)
-        st.dataframe(df)
-        print(df)
+        with st.expander("See Data"):
+            st.dataframe(df)
+      
+
 
 ###########################################TOPIC MODEL########################################################
 
@@ -476,11 +484,21 @@ with tab1:
         import Sastrawi.StopWordRemover.StopWordRemover
         import pyLDAvis.gensim_models as gensimvis
         import pyLDAvis
+        from wordcloud import WordCloud
+        import matplotlib.pyplot as plt
 
         from nltk.corpus import stopwords
         from nltk.tokenize import word_tokenize
 
-        
+        st.header(f'Topics of News')
+
+        # Display the select box for keywords
+        selected_keyword = st.selectbox("Select a Keyword", df['keyword'].unique())
+
+        # Filter the data for the selected keyword
+        selected_data = df[df['keyword'] == selected_keyword]
+
+
         # Define a list of Indonesian stopwords
         stopwords_id = [
             # Add your list of stopwords here
@@ -513,20 +531,15 @@ with tab1:
             # stemmed_text = [stemmer.stem(word) for word in filtered_text]
             
             # return " ".join(stemmed_text)
+
+
+        selected_data['cleaned_content'] = selected_data['content'].apply(clean_content)
+        selected_data['tags'] = selected_data['tags'].apply(lambda x: ' '.join(x) if isinstance(x, list) else x)
+
         
-     
-
-        df['cleaned_content'] = df['content'].apply(clean_content)
-        df['tags'] = df['tags'].apply(lambda x: ' '.join(x) if isinstance(x, list) else x)
-
-        
-        with st.expander("See Data"):
-            st.dataframe(df)
-
-
         # Create a list of documents
 
-        documents = df['cleaned_content'].values.tolist()
+        documents = selected_data['cleaned_content'].values.tolist()
 
         # Tokenize the documents
         tokenized_docs = [doc.split() for doc in documents]
@@ -580,11 +593,46 @@ with tab1:
 
         # Display pyLDAvis for each selected query
         html_content = open(html_file_path, 'r', encoding='utf-8').read()
-        st.header(f'Topics of News')
         st.components.v1.html(html_content, width=1500, height=800)
 
         st.write("Topics and Keywords with Probabilities:")
         st.table(pd.DataFrame(table_data))
+
+        # # Generate word clouds for each topic
+        # for topic_id, topic in lda_model.show_topics(num_topics=num_topics, formatted=False):
+        #     keywords = [word for word, prob in topic]
+        #     probabilities = [prob for word, prob in topic]
+        #     topic_result = {
+        #         "Topic": f"Topic {topic_id + 1}",
+        #         "Keywords": ", ".join(keywords),
+        #         "Probabilities": probabilities  # Store the probabilities as a list
+        #     }
+        #     # Display the select box for topics
+        selected_topic = st.selectbox("Select a Topic", range(num_topics), format_func=lambda x: f"Topic {x + 1}", key="n3wswcloud")
+
+        # Generate word clouds for each topic
+        for topic_id, topic in lda_model.show_topics(num_topics=num_topics, formatted=False):
+            keywords = [word for word, prob in topic]
+            probabilities = [prob for word, prob in topic]
+            topic_result = {
+                "Topic": f"Topic {topic_id + 1}",
+                "Keywords": ", ".join(keywords),
+                "Probabilities": probabilities  # Store the probabilities as a list
+            }
+            # Generate word cloud for the selected topic
+            if topic_id == int(selected_topic):
+                selected_topic_keywords = topic_results[topic_id]["Keywords"].split(', ')  # Split into a list of words
+                wordcloud_text = " ".join(selected_topic_keywords)  # Combine all keywords into a single string
+                wordcloud = WordCloud(width=800, height=400, background_color='white').generate(wordcloud_text)
+
+                # Plot the word cloud for the selected topic
+                plt.figure(figsize=(10, 5))
+                plt.imshow(wordcloud, interpolation='bilinear')
+                plt.axis("off")
+                plt.title(f"Topic {topic_id + 1} - Keywords Word Cloud")
+                st.pyplot(plt) 
+
+
 
         
 #######################SENTIMENTANALISIS#############################
@@ -596,22 +644,21 @@ with tab1:
 
         # Perform sentiment analysis on each document in the cleaned_content column
         sentiments = []
-        for doc in df['cleaned_content']:
+        for doc in selected_data['cleaned_content']:
             sentiment_scores = analyzer.polarity_scores(doc)
             sentiments.append(sentiment_scores)
 
         # Add the sentiment scores to the DataFrame
-        df['Sentiment'] = sentiments
+        selected_data['Sentiment'] = sentiments
 
         # Display the DataFrame with sentiment scores
         st.subheader("Sentiment Analysis Results:")
         
-       
 
         # Extract the compound scores from the 'Sentiment' column
-        compound_scores = df['Sentiment'].apply(lambda x: x['compound'])
+        compound_scores = selected_data['Sentiment'].apply(lambda x: x['compound'])
 
-        col1, col2 =st.columns(2)
+        col1, col2 =st.columns([1,2])
 
         with col1:
 
@@ -620,7 +667,8 @@ with tab1:
             # Display the average sentiment score
             st.write("Average Sentiment Score:", average_sentiment)
 
-            st.dataframe(df[['cleaned_content', 'Sentiment']])
+            with st.expander("See Data"):
+                st.dataframe(selected_data[['cleaned_content', 'Sentiment']])
 
             
 
@@ -629,10 +677,10 @@ with tab1:
         with col2:
 
             # Calculate the count of sentiments
-            sentiment_counts = df['Sentiment'].apply(lambda x: x['compound'] > 0).value_counts()
+            sentiment_counts = selected_data['Sentiment'].apply(lambda x: x['compound'] > 0).value_counts()
             positive_count = sentiment_counts.get(True, 0)
             negative_count = sentiment_counts.get(False, 0)
-            neutral_count = len(df) - positive_count - negative_count
+            neutral_count = len(selected_data) - positive_count - negative_count
 
             # Create a pie chart
             fig = go.Figure(data=go.Pie(
@@ -643,7 +691,7 @@ with tab1:
 
             # Set the chart title
             fig.update_layout(
-                title="Sentiment Analysis of News",
+                title=f"Sentiment Analysis of News for keyword:{selected_keyword}",
                 showlegend=True,
                 
             )
