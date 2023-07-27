@@ -198,8 +198,9 @@ with tab1:
         start_date = end_date - timedelta(days=30)
 
         # Create widgets for selecting the screen name and time range
-        selected_names = st.multiselect('Select names to compare', names, default=default_names, key='selper')
-        cols_ta, cols_tb = st.columns([1, 1])
+        cols_t0, cols_ta, cols_tb = st.columns([2, 1, 1])
+         
+        selected_names = cols_t0.multiselect('Select names to compare', names, default=default_names, key='selper')
         start_date = pd.to_datetime(cols_ta.date_input('Start date', value=start_date), utc=True)
         end_date = pd.to_datetime(cols_tb.date_input('End date', value=end_date), utc=True)
 
@@ -211,8 +212,18 @@ with tab1:
             df1_filtered = pd.DataFrame()
 
         if len(df1_filtered) > 0:
+            # Calculate total posts and average posts per day for each account
+            df1_summary = df1_filtered.groupby('name').agg(
+                total_posts=('date', 'count'),
+                average_posts_per_day=('date', lambda x: x.count() / (end_date - start_date).days)
+            ).reset_index()
+
+            # Display the matrix with total posts and average posts per day
+            st.write(df1_summary)
+
+            # Plot the time series line chart as before
             df1_grouped = df1_filtered.groupby(['date', 'name']).size().reset_index(name='count')
-            fig, ax = plt.subplots(figsize=(10, 6))
+            fig, ax = plt.subplots(figsize=(20, 6))
             sns.lineplot(data=df1_grouped, x='date', y='count', hue='name', ax=ax)
             ax.set_title(f"Tweets per Day of {', '.join(selected_names)}")
             ax.set_xlabel("Date")
@@ -230,11 +241,11 @@ with tab1:
         from pyvis.network import Network
         import streamlit as st
         from datetime import datetime, timedelta
-
+        import pandas as pd
 
         st.header('TWITTER NETWORK ANALYSIS OF KEYPERSONS')
+
         # Function to create social network analysis graph
-        @st.cache_data
         def create_social_network_analysis(json_data):
             # Create an undirected graph
             graph = nx.Graph()
@@ -272,7 +283,6 @@ with tab1:
             return graph
 
         # Load JSON data from selected files
-        @st.cache_data
         def load_json_files(json_files):
             json_data_list = []
             for json_file in json_files:
@@ -285,22 +295,33 @@ with tab1:
         folder_path = "twittl"
         json_files = [os.path.join(folder_path, file) for file in os.listdir(folder_path) if file.endswith(".json")]
 
-        snakpcol1,snakpcol2,snakpcol3=st.columns([2,1,1])
+        snakpcol1, snakpcol2, snakpcol3 = st.columns([2, 1, 1])
+
+        # Initialize st.session_state
+        if "selected_files" not in st.session_state:
+            st.session_state.selected_files = [os.path.basename(json_files[0]).split(".")[0]]
+
+        if "start_date" not in st.session_state:
+            default_start_date = datetime.now().date() - timedelta(days=30)
+            st.session_state.start_date = default_start_date
+
+        if "end_date" not in st.session_state:
+            default_end_date = datetime.now().date()
+            st.session_state.end_date = default_end_date
+
         # Select JSON files
         with snakpcol1:
             selected_files = st.multiselect(
                 "Select JSON files",
                 [os.path.basename(file).split(".")[0] for file in json_files],
-                default=[os.path.basename(json_files[0]).split(".")[0]],
+                default=st.session_state.selected_files,
             )
 
         # Select start and end date
         with snakpcol2:
-            default_start_date = datetime.now().date() - timedelta(days=30)
-            start_date = st.date_input("Select start date", value=default_start_date)
+            start_date = st.date_input("Select start date", value=st.session_state.start_date)
         with snakpcol3:
-            default_end_date = datetime.now().date()
-            end_date = st.date_input("Select end date", value=default_end_date)
+            end_date = st.date_input("Select end date", value=st.session_state.end_date)
 
         # Filter JSON files based on selected dates
         filtered_files = []
@@ -338,12 +359,156 @@ with tab1:
             5: "#ff00ff"   # Magenta
         }
 
-        html_path = "html_files/social_network.html"
+        # Function to compute network statistics
+        def compute_network_statistics(graph):
+            num_nodes = len(graph.nodes())
+            num_edges = len(graph.edges())
+            density = nx.density(graph)
+            connectivity = nx.is_connected(graph)
+            avg_clustering = nx.average_clustering(graph)
+
+            # Compute counts for each relationship type
+            follower_count = sum(1 for (source, target, data) in graph.edges(data=True) if data.get('relationship', '') == "follower")
+            following_count = sum(1 for (source, target, data) in graph.edges(data=True) if data.get('relationship', '') == "following")
+            mention_count = sum(1 for (source, target, data) in graph.edges(data=True) if data.get('relationship', '') == "mention")
+            reply_count = sum(1 for (source, target, data) in graph.edges(data=True) if data.get('relationship', '') == "reply")
+            quote_count = sum(1 for (source, target, data) in graph.edges(data=True) if data.get('relationship', '') == "quoted")
+
+            # Compute connectivity score
+            if connectivity:
+                connectivity_score = 1.0
+            else:
+                largest_component = max(nx.connected_components(graph), key=len)
+                connectivity_score = len(largest_component) / num_nodes
+
+            return {
+                "Number of Nodes": num_nodes,
+                "Number of Edges": num_edges,
+                "Density": density,
+                "Connectivity": connectivity_score,
+                "Average Clustering": avg_clustering,
+                "Follower Count": follower_count,
+                "Following Count": following_count,
+                "Mention Count": mention_count,
+                "Reply Count": reply_count,
+                "Quote Count": quote_count
+            }
+        
+        
+
+       # Compute network statistics for each graph
+        network_statistics = [compute_network_statistics(graph) for graph in graphs]
+
+        # Create a pandas DataFrame from the network statistics
+        df_network_statistics = pd.DataFrame(network_statistics)
+
+        # Transpose the DataFrame to display it vertically
+        df_network_statistics = df_network_statistics.T
+
+        # Define the threshold for virality analysis
+        virality_threshold = 0.5
+
+        # Function to analyze network implications
+        def analyze_network_implications(df_network_statistics):
+            density = df_network_statistics.loc["Density"].values[0]
+            virality_threshold = 0.5
+            
+            if density > virality_threshold:
+                virality = "Tinggi"
+            else:
+                virality = "Rendah"
+                
+            return virality
+
+        # Function to analyze network engagement
+        def analyze_network_engagement(df_network_statistics):
+            avg_clustering = df_network_statistics.loc["Average Clustering"].values[0]
+            num_edges = df_network_statistics.loc["Number of Edges"].values[0]
+            
+            clustering_threshold = 0.2  # Adjust this threshold as needed
+            edges_threshold = 50  # Adjust this threshold as needed
+            
+            if avg_clustering > clustering_threshold and num_edges > edges_threshold:
+                engagement = "Tinggi"
+            else:
+                engagement = "Rendah"
+                
+            return engagement
+
+        # Function to analyze network reach
+        def analyze_network_reach(df_network_statistics):
+            follower_count = df_network_statistics.loc["Follower Count"].values[0]
+            following_count = df_network_statistics.loc["Following Count"].values[0]
+            
+            if follower_count > following_count:
+                reach = "Luas"
+            else:
+                reach = "Sempit"
+                
+            return reach
+
+        # Function to analyze network influence
+        def analyze_network_influence(df_network_statistics):
+            mention_count = df_network_statistics.loc["Mention Count"].values[0]
+            reply_count = df_network_statistics.loc["Reply Count"].values[0]
+            quote_count = df_network_statistics.loc["Quote Count"].values[0]
+            
+            total_interactions = mention_count + reply_count + quote_count
+            
+            if total_interactions > 100:  # Adjust this threshold as needed
+                influence = "Tinggi"
+            else:
+                influence = "Rendah"
+                
+            return influence
+
+        # Analyze network implications
+        network_implications = analyze_network_implications(df_network_statistics)
+
+        # Analyze network engagement
+        network_engagement = analyze_network_engagement(df_network_statistics)
+
+        # Analyze network reach
+        network_reach = analyze_network_reach(df_network_statistics)
+
+        # Analyze network influence
+        network_influence = analyze_network_influence(df_network_statistics)
 
 
+        # Function untuk memberikan rekomendasi otomatis berdasarkan analisis jaringan
+        def generate_recommendations(network_implications, network_engagement, network_reach, network_influence):
+            recommendations = []
+
+            if network_implications == "High":
+                recommendations.append("Pertimbangkan untuk memanfaatkan viralitas tinggi jaringan ini dalam kampanye yang berdampak.")
+            else:
+                recommendations.append("Fokus pada keterlibatan terarah untuk meningkatkan viralitas jaringan.")
+
+            if network_engagement == "High":
+                recommendations.append("Terlibatlah aktif dengan jaringan ini untuk memperkuat hubungan.")
+            else:
+                recommendations.append("Cari cara untuk meningkatkan keterlibatan dan interaksi dalam jaringan ini.")
+
+            if network_reach == "Wide":
+                recommendations.append("Jaringan Anda memiliki jangkauan yang luas. Pertimbangkan untuk mencapai audiens baru.")
+            else:
+                recommendations.append("Manfaatkan jaringan yang erat untuk menguatkan pesan kepada kelompok tertentu.")
+
+            if network_influence == "High":
+                recommendations.append("Jaringan Anda memiliki pengaruh yang signifikan. Gunakan pengaruh ini untuk mendorong perubahan positif.")
+            else:
+                recommendations.append("Usahakan untuk meningkatkan interaksi dan sebutan untuk meningkatkan pengaruh jaringan Anda.")
+
+            return recommendations
+
+        # Generate automatic recommendations based on the network analysis
+        network_recommendations = generate_recommendations(network_implications, network_engagement, network_reach, network_influence)
+
+       
+        # Visualize the graph using Pyvis
         def visualize_social_network(graphs):
             # Visualize the graph using Pyvis
-            nt = Network(height="800px", width="100%", bgcolor="#fff", font_color="grey")
+            nt = Network(height="910px", width="100%", bgcolor="#fff", font_color="grey")
             for i, graph in enumerate(graphs):
                 for edge in graph.edges(data=True):
                     source, target, data = edge
@@ -354,51 +519,63 @@ with tab1:
                     nt.add_edge(source, target, label=relationship)
 
             # Save the graph to an HTML file
+            html_path = "html_files/social_network.html"
             nt.save_graph(html_path)
 
-            # Display the network visualization in Streamlit
-            with open(html_path, 'r') as file:
-                html_string = file.read()
-                st.components.v1.html(html_string, height=960, scrolling=True)
+            # Display the network visualization
+            st.components.v1.html(open(html_path, 'r').read(), height=920, scrolling=False)
+        
 
 ############################################DEGREE CENTRALITY #########################################
 
-        def visualize_degree_centrality_network(graphs):
-            nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
-            degree_centrality_values = []
+       
+    def visualize_degree_centrality_network(graphs):
+        nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
+        degree_centrality_values = []
 
-            for graph in graphs:
-                # Calculate degree centrality
-                degree_centrality = nx.degree_centrality(graph)
-                degree_subgraph = graph.subgraph([node for node, centrality in degree_centrality.items() if centrality > 0])
-                degree_centrality_values.append(degree_centrality)
+        for graph in graphs:
+            # Calculate degree centrality
+            degree_centrality = nx.degree_centrality(graph)
+            degree_subgraph = graph.subgraph([node for node, centrality in degree_centrality.items() if centrality > 0])
+            degree_centrality_values.append(degree_centrality)
 
-                # Add nodes to the network with size based on degree centrality
-                for node in degree_subgraph.nodes:
-                    centrality = degree_centrality[node]
-                    node_size = centrality * 20  # Adjust the scaling factor as needed
-                    nt.add_node(node, label=node, size=node_size)
+            # Add nodes to the network with size based on degree centrality
+            for node in degree_subgraph.nodes:
+                centrality = degree_centrality[node]
+                node_size = centrality * 20  # Adjust the scaling factor as needed
+                nt.add_node(node, label=node, size=node_size)
 
-                # Add edges to the network
-                for edge in degree_subgraph.edges:
-                    source = edge[0]
-                    target = edge[1]
-                    relationship = degree_subgraph.edges[edge]['relationship']
-                    nt.add_edge(source, target, label=relationship)
+            # Add edges to the network
+            for edge in degree_subgraph.edges:
+                source = edge[0]
+                target = edge[1]
+                relationship = degree_subgraph.edges[edge]['relationship']
+                nt.add_edge(source, target, label=relationship)
 
-            nt.save_graph('html_files/degree_centrality_network.html')
+        nt.save_graph('html_files/degree_centrality_network.html')
 
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
             with open('html_files/degree_centrality_network.html', 'r') as f:
                 html_string = f.read()
                 st.components.v1.html(html_string, height=960, scrolling=True)
 
-            top_actors = []
-            centrality_scores = []
-            for degree_centrality in degree_centrality_values:
-                top_actors += [actor for actor in degree_centrality if actor in degree_subgraph.nodes]
-                centrality_scores += [degree_centrality[actor] for actor in top_actors if actor in degree_centrality]
+        top_actors = []
+        centrality_scores = []
+        for degree_centrality in degree_centrality_values:
+            top_actors += [actor for actor in degree_centrality if actor in degree_subgraph.nodes]
+            centrality_scores += [degree_centrality[actor] for actor in top_actors if actor in degree_centrality]
 
-            y_pos = list(range(len(top_actors)))
+        # Create a DataFrame of the top 10 degree centrality nodes
+        df_top_actors = pd.DataFrame({'Actor': top_actors, 'Degree Centrality': centrality_scores})
+        df_top_actors = df_top_actors.sort_values(by='Degree Centrality', ascending=False).head(10)
+        with col2:
+            # Display the top 10 degree centrality nodes DataFrame
+            st.subheader("Top 10 Degree Centrality Nodes")
+            st.dataframe(df_top_actors)
+
+            x_pos = list(range(len(df_top_actors)))
 
             # Set the font size
             plt.rc('font', size=8)
@@ -406,18 +583,20 @@ with tab1:
             # Set the figure size
             fig, ax = plt.subplots(figsize=(10, 6))  # Set the width to 10 inches and height to 6 inches
 
-            ax.barh(y_pos, centrality_scores)
-            ax.set_xlabel('Degree Centrality')
-            ax.set_ylabel('Top Actors')
-            ax.set_title('Top Main Actors')
-            ax.set_yticks(y_pos)
-            ax.set_yticklabels(top_actors[:len(y_pos)])  # Truncate the labels to match the length of y_pos
+            ax.bar(x_pos, df_top_actors['Degree Centrality'])
+            ax.set_ylabel('Degree Centrality')
+            ax.set_xlabel('Top Actors')
+            ax.set_title('Top 10 Main Actors by Degree Centrality')
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(df_top_actors['Actor'], rotation=45, ha='right')  # Display user names on the x-axis
             plt.tight_layout()
 
             # Display the plot in Streamlit
-            st.pyplot(fig)
+            st.pyplot(fig) 
 
 ################## BETWEENESS CENTRALITY ##########################
+
+   
 
     def visualize_betweenness_centrality_network(graphs):
         nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
@@ -444,9 +623,12 @@ with tab1:
 
         nt.save_graph('html_files/betweenness_centrality_network.html')
 
-        with open('html_files/betweenness_centrality_network.html', 'r') as f:
-            html_string = f.read()
-            st.components.v1.html(html_string, height=960, scrolling=True)
+        col1, col2 = st.columns([3, 1])
+
+        with col1:
+            with open('html_files/betweenness_centrality_network.html', 'r') as f:
+                html_string = f.read()
+                st.components.v1.html(html_string, height=960, scrolling=True)
 
         top_actors = []
         centrality_scores = []
@@ -454,28 +636,36 @@ with tab1:
             top_actors += [actor for actor in betweenness_centrality if actor in betweenness_subgraph.nodes]
             centrality_scores += [betweenness_centrality[actor] for actor in top_actors if actor in betweenness_centrality]
 
-        y_pos = list(range(len(top_actors)))
+        # Create a DataFrame of the top 10 actors based on betweenness centrality
+        df_top_actors = pd.DataFrame({'Actor': top_actors, 'Betweenness Centrality': centrality_scores})
+        df_top_actors = df_top_actors.sort_values(by='Betweenness Centrality', ascending=False).head(10)
 
-        fig, ax = plt.subplots()
-        ax.barh(y_pos, centrality_scores)
-        ax.set_xlabel('Betweenness Centrality')
-        ax.set_ylabel('Actors')
-        ax.set_title('Top Actors based on Betweenness Centrality')
-        ax.set_yticks(y_pos)
-        ax.set_yticklabels(top_actors[:len(y_pos)])  # Truncate the labels to match the length of y_pos
-        plt.tight_layout()
+        # Display the top 10 actors DataFrame
+        with col2:
+            st.subheader("Top 10 Actors based on Betweenness Centrality")
+            st.dataframe(df_top_actors)
 
-        # Display the plot in Streamlit
-        st.pyplot(fig)
+            x_pos = list(range(len(df_top_actors)))
+
+            fig, ax = plt.subplots()
+            ax.bar(x_pos, df_top_actors['Betweenness Centrality'])
+            ax.set_xlabel('Actors')
+            ax.set_ylabel('Betweenness Centrality')
+            ax.set_title('Top 10 Actors based on Betweenness Centrality')
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(df_top_actors['Actor'], rotation=45, ha='right')  # Display user names on the x-axis
+            plt.tight_layout()
+
+            # Display the plot in Streamlit
+            st.pyplot(fig)
+
 
 
 
 ############################### CLOSENESS CENTRALITY ################################
 
-    # Function to visualize the closeness centrality network using Pyvis
-  
-    def visualize_closeness_centrality_network(graphs):
-        nt = Network(height='750px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
+    def visualize_closeness_centrality_network(graphs, tweet_user):
+        nt = Network(height='790px', width='100%', bgcolor='#ffffff', font_color='#333333', directed=True)
         sorted_centralities = []
 
         for graph in graphs:
@@ -496,25 +686,54 @@ with tab1:
                 nt.add_edge(source, target, label=relationship)
 
         nt.save_graph('html_files/closeness_centrality_network.html')
-        with open('html_files/closeness_centrality_network.html', 'r') as f:
-            html_string = f.read()
-            st.components.v1.html(html_string, height=960, scrolling=True)
 
         top_actors = []
         centrality_scores = []
         for sorted_centrality in sorted_centralities:
-            top_actors += [node for node, _ in sorted_centrality[:5]]
-            centrality_scores += [centrality for _, centrality in sorted_centrality[:5]]
+            top_actors += [node for node, _ in sorted_centrality[:10]]
+            centrality_scores += [centrality for _, centrality in sorted_centrality[:10]]
 
-        plt.figure(figsize=(10, 6))
-        plt.barh(top_actors, centrality_scores)
-        plt.xlabel('Closeness Centrality')
-        plt.ylabel('Actors')
-        plt.title('Top Actors Based on Closeness Centrality')
-        plt.tight_layout()
+        # Create a DataFrame of the top 10 closeness centrality nodes
+        df_top_actors = pd.DataFrame({'Actor': top_actors, 'Closeness Centrality': centrality_scores})
 
-        # Display the chart in Streamlit
-        st.pyplot(plt)
+        message_closeness = "Di atas adalah representasi visual dari subgraf dengan sepuluh simpul teratas berdasarkan sentralitas kedekatan (closeness centrality).\n"
+        # message_closeness += f"Sepuluh simpul teratas adalah: {', '.join(top_actors)}.\n"
+        # message_closeness += f"Mereka memiliki nilai sentralitas kedekatan sebagai berikut: {', '.join(map(str, centrality_scores))}.\n"
+        message_closeness += "Sentralitas kedekatan adalah ukuran seberapa cepat simpul dapat mencapai simpul lain dalam jaringan.\n"
+        message_closeness += "Sentralitas kedekatan yang lebih tinggi menandakan bahwa simpul tersebut lebih sentral dan terhubung dengan baik dalam jaringan.\n"
+        message_closeness += "Simpul-simpul dengan closeness centrality yang tinggi berperan sebagai aktor pendukung dengan menyokong dan menjaga soliditas lingkaran sosial mereka, daripada sebagai aktor penjembatan (hub)."
+        
+        
+
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            
+            with open('html_files/closeness_centrality_network.html', 'r') as f:
+                html_string = f.read()
+            st.components.v1.html(html_string, height=800, scrolling=True)
+
+            # Display the dynamic message for closeness centrality
+            st.subheader("Detail Analisis Jaringan Sosial")
+            st.caption(message_closeness)
+
+        
+
+        with col2:
+            # Display the top 10 closeness centrality nodes DataFrame
+            st.subheader("Top 10 Closeness Centrality Nodes")
+            st.dataframe(df_top_actors)
+            
+            # Display the chart in Streamlit
+            plt.figure(figsize=(10, 6))
+            plt.bar(top_actors, centrality_scores)
+            plt.ylabel('Closeness Centrality')
+            plt.xlabel('Actors')
+            plt.title('Top Actors Based on Closeness Centrality', fontsize=16)
+            plt.tight_layout()
+            st.pyplot(plt) 
+
+
 
 
 ##############################################################
@@ -522,7 +741,29 @@ with tab1:
 
     with colvics1:
         
-        visualize_social_network(graphs)
+        col1, col2=st.columns ([3,1])
+        with col1:
+            visualize_social_network(graphs)
+            
+            
+
+        with col2:
+           # Display the pandas dataframe with network statistics and implications
+            st.subheader("Network Statistics:")
+            st.dataframe(df_network_statistics)
+
+                        # Tampilkan pembacaan analisis jaringan sosial
+            st.subheader("Pembacaan Analisis Jaringan Sosial")
+            st.write(f"Impikasi Jaringan: {network_implications}")
+            st.write(f"Keterlibatan Jaringan: {network_engagement}")
+            st.write(f"Jangkauan Jaringan: {network_reach}")
+            st.write(f"Pengaruh Jaringan: {network_influence}")
+
+            # Tampilkan rekomendasi otomatis
+            st.subheader("Rekomendasi")
+            for recommendation in network_recommendations:
+                st.write(recommendation)
+
 
     with colvics2:
         # Call the visualize_degree_centrality_network function
@@ -533,7 +774,10 @@ with tab1:
         visualize_betweenness_centrality_network(graphs)
     with colvics4:
 
-        visualize_closeness_centrality_network(graphs)
+        tweet_user = tweet["user"]["screen_name"]
+
+        visualize_closeness_centrality_network(graphs, tweet_user)
+        # Display the dynamic message for closeness centrality
 
 
 
